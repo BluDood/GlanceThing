@@ -1,0 +1,17 @@
+.timedate {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.time {
+  font-weight: 700;
+  font-size: 3em;
+}
+
+.date {
+  font-weight: 500;
+  font-size: 1.2em;
+}

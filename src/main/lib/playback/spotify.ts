@@ -3,9 +3,10 @@ import { TOTP } from 'totp-generator'
 import { WebSocket } from 'ws'
 
 import { BasePlaybackHandler } from './BasePlaybackHandler.js'
-import { log } from '../utils.js'
+import { log, LogLevel, intToRgb } from '../utils.js'
 
 import { Action, PlaybackData, RepeatMode } from '../../types/Playback.js'
+import { getStorageValue, setStorageValue } from '../storage.js'
 
 async function subscribe(connection_id: string, token: string) {
   return await axios.put(
@@ -142,6 +143,7 @@ export async function refreshAccessToken(
 }
 
 interface SpotifyTrackItem {
+  id: string
   name: string
   external_urls: {
     spotify: string
@@ -165,6 +167,7 @@ interface SpotifyTrackItem {
 }
 
 interface SpotifyEpisodeItem {
+  id: string
   name: string
   external_urls: {
     spotify: string
@@ -216,6 +219,29 @@ export interface SpotifyCurrentPlayingResponse {
   currently_playing_type: 'track' | 'episode'
   is_playing: boolean
   item: SpotifyTrackItem | SpotifyEpisodeItem
+}
+
+export interface LyricsResponse {
+  lyrics?: {
+    syncType: string
+    lines: {
+      startTimeMs: string
+      endTimeMs: string
+      words: string
+      syllables?: {
+        startTimeMs: string;
+        endTimeMs: string;
+        text: string;
+      }[]
+    }
+  }
+  colors?: {
+    background: number
+    text: number
+    highlightText: number
+  }
+  hasVocalRemoval?: boolean
+  message?: string
 }
 
 const defaultSupportedActions: Action[] = [
@@ -316,10 +342,18 @@ class SpotifyHandler extends BasePlaybackHandler {
   ws: WebSocket | null = null
   instance: AxiosInstance | null = null
 
+  lyricsCache: Map<string, { data: LyricsResponse, timestamp: number }> = new Map()
+  lyricsCacheExpiration: number = 24 * 60 * 60 * 1000 // 24 hours
+  cacheCleanupInterval: NodeJS.Timeout | null = null
+  lyricsCacheStorageKey: string = 'spotify_lyrics_cache'
+
   async setup(config: SpotifyConfig): Promise<void> {
     log('Setting up', 'Spotify')
 
     this.config = config
+
+    // Load lyrics cache from storage if available
+    this.loadLyricsCache()
 
     this.instance = axios.create({
       baseURL: 'https://api.spotify.com/v1',
@@ -350,10 +384,12 @@ class SpotifyHandler extends BasePlaybackHandler {
       return res
     })
 
-    this.webToken = await getWebToken(this.config!.sp_dc).catch(err => {
-      this.emit('error', err)
-      return null
-    })
+    if (this.config!.sp_dc) {
+      this.webToken = await getWebToken(this.config!.sp_dc).catch(err => {
+        log(`Error getting webToken: ${err}`, 'Spotify', LogLevel.WARN)
+        return null
+      })
+    }
 
     this.accessToken = await refreshAccessToken(
       this.config!.clientId,
@@ -364,11 +400,19 @@ class SpotifyHandler extends BasePlaybackHandler {
       return null
     })
 
-    this.ws = new WebSocket(
-      `wss://dealer.spotify.com/?access_token=${this.webToken}`
-    )
+    if (this.webToken) {
+      this.ws = new WebSocket(
+        `wss://dealer.spotify.com/?access_token=${this.webToken}`
+      )
+      await this.start()
+    } else {
+      this.emit('open', this.name)
+    }
 
-    await this.start()
+    this.cacheCleanupInterval = setInterval(() => {
+      this.cleanLyricsCache()
+      this.saveLyricsCache()
+    }, 60 * 60 * 1000)
   }
 
   async start() {
@@ -424,11 +468,73 @@ class SpotifyHandler extends BasePlaybackHandler {
   async cleanup(): Promise<void> {
     log('Cleaning up', 'Spotify')
 
+    this.saveLyricsCache()
+    this.lyricsCache.clear()
+
+    if (this.cacheCleanupInterval) {
+      clearInterval(this.cacheCleanupInterval)
+      this.cacheCleanupInterval = null
+    }
+
     if (!this.ws) return
     this.ws.removeAllListeners()
     this.ws.close()
     this.ws = null
     this.removeAllListeners()
+  }
+
+  cleanLyricsCache(): void {
+    const now = Date.now()
+    let expiredCount = 0;
+
+    for (const [trackId, entry] of this.lyricsCache.entries()) {
+      if (now - entry.timestamp > this.lyricsCacheExpiration) {
+        this.lyricsCache.delete(trackId)
+        expiredCount++;
+      }
+    }
+
+    log(`Cleaned lyrics cache. Removed ${expiredCount} expired entries. Current size: ${this.lyricsCache.size} entries`, 'Spotify', LogLevel.DEBUG)
+  }
+
+  saveLyricsCache(): void {
+    try {
+      const cacheEntries = Array.from(this.lyricsCache.entries())
+      setStorageValue(this.lyricsCacheStorageKey, cacheEntries)
+      log(`Saved lyrics cache with ${cacheEntries.length} entries`, 'Spotify', LogLevel.DEBUG)
+    } catch (error) {
+      log(`Error saving lyrics cache: ${error}`, 'Spotify', LogLevel.ERROR)
+    }
+  }
+
+  loadLyricsCache(): void {
+    try {
+      const cachedData = getStorageValue(this.lyricsCacheStorageKey)
+      if (cachedData && Array.isArray(cachedData)) {
+        this.lyricsCache = new Map(cachedData)
+        log(`Loaded lyrics cache with ${this.lyricsCache.size} entries`, 'Spotify', LogLevel.DEBUG)
+        this.cleanLyricsCache()
+      } else {
+        log(`No lyrics cache found or invalid format`, 'Spotify', LogLevel.DEBUG)
+      }
+    } catch (error) {
+      log(`Error loading lyrics cache: ${error}`, 'Spotify', LogLevel.ERROR)
+      this.lyricsCache = new Map()
+    }
+  }
+
+  getLyricsCacheStats(): { size: number, avgAge: number } {
+    const now = Date.now()
+    let totalAge = 0
+
+    for (const entry of this.lyricsCache.values()) {
+      totalAge += now - entry.timestamp
+    }
+
+    const size = this.lyricsCache.size
+    const avgAge = size > 0 ? totalAge / size / 1000 : 0
+
+    return { size, avgAge }
   }
 
   async validateConfig(config: unknown): Promise<boolean> {
@@ -538,6 +644,81 @@ class SpotifyHandler extends BasePlaybackHandler {
       return imageRes.data
     } else {
       return null
+    }
+  }
+
+  async getLyrics(): Promise<LyricsResponse | null> {
+    const current = await this.getCurrent()
+    if (!current) return null
+    if (current.currently_playing_type === 'episode') {
+      return { message: 'No lyrics for podcast' }
+    }
+
+    const item = current.item as SpotifyTrackItem
+    const trackId = item.id
+    const now = Date.now()
+    try {
+      const cachedLyrics = this.lyricsCache.get(trackId)
+
+      if (cachedLyrics && (now - cachedLyrics.timestamp < this.lyricsCacheExpiration)) {
+        log(`Using cached lyrics for track: ${trackId}`, 'Spotify', LogLevel.DEBUG)
+        return cachedLyrics.data
+      }
+
+      log(`Fetching lyrics for track: ${trackId}`, 'Spotify')
+      let url = `https://spclient.wg.spotify.com/color-lyrics/v2/track/${trackId}`
+
+      if (item.album.images[0]?.url) {
+        url += `/image/${encodeURIComponent(item.album.images[0].url)}`
+      }
+
+      url += '?format=json&vocalRemoval=false&market=from_token'
+      log(`${url}`, 'Spotify', LogLevel.DEBUG)
+
+      const fetchLyrics = async (): Promise<any> => {
+        return await axios.get(url, {
+          headers: {
+            'authorization': `Bearer ${this.webToken}`,
+            'app-platform': 'WebPlayer'
+          },
+          validateStatus: () => true
+        })
+      }
+
+      let res = await fetchLyrics()
+
+      if (res.status === 401 && this.config?.sp_dc) {
+        log('Received 401 error, refreshing webToken and retrying', 'Spotify', LogLevel.WARN)
+        try {
+          this.webToken = await getWebToken(this.config.sp_dc)
+          log('Successfully refreshed webToken', 'Spotify', LogLevel.DEBUG)
+          res = await fetchLyrics()
+        } catch (refreshError) {
+          log(`Failed to refresh webToken: ${refreshError}`, 'Spotify', LogLevel.ERROR)
+          throw new Error(`Failed to refresh webToken: ${refreshError}`)
+        }
+      }
+
+      if (res.status !== 200) {
+        throw new Error(`Failed to fetch lyrics: ${res.status}`)
+      }
+      if (res.data.colors) {
+        intToRgb(res.data.colors?.background ?? 0)
+        res.data.colors = {
+          background: intToRgb(res.data.colors?.background) ?? 0,
+          text: intToRgb(res.data.colors?.text) ?? 0,
+          highlightText: intToRgb(res.data.colors?.highlightText) ?? 0
+        }
+      }
+      this.lyricsCache.set(trackId, { data: res.data, timestamp: now })
+      this.saveLyricsCache()
+      return res.data
+    } catch (error) {
+      log(`Error fetching lyrics: ${error}`, 'Spotify', LogLevel.ERROR)
+      const noLyricsMsg = 'No lyrics for this track'
+      this.lyricsCache.set(trackId, { data: { message: noLyricsMsg }, timestamp: now })
+      this.saveLyricsCache()
+      return this.lyricsCache.get(trackId)?.data ?? null
     }
   }
 }

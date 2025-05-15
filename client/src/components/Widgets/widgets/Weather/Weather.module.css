@@ -1,0 +1,81 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  border-radius: 1rem;
+  text-align: center;
+  flex: 1;
+}
+
+.weather {
+  display: flex;
+  gap: 5px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.location {
+  font-size: 1em;
+  font-weight: bold;
+  display: flex;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.row{
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  font-size: 3rem;
+}
+
+.temp {
+  font-size: 3rem;
+  font-weight: 500;
+}
+
+.condition {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  padding: 1rem;
+  flex: 1;
+  opacity: 0.8;
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  padding: 1rem;
+  gap: 1rem;
+  flex: 1;
+}
+
+.retryButton {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.retryButton:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}

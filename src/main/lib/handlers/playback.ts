@@ -65,6 +65,20 @@ export const actions: HandlerAction[] = [
     handle: async (_, data) => {
       await playbackManager.repeat((data as { state: RepeatMode }).state)
     }
+  },
+  {
+    action: 'lyrics',
+    handle: async ws => {
+      const lyrics = await playbackManager.getLyrics()
+      if (!lyrics) return
+      ws.send(
+        JSON.stringify({
+          type: 'playback',
+          action: 'lyrics',
+          data: lyrics
+        })
+      )
+    }
   }
 ]
 

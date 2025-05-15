@@ -10,6 +10,7 @@ interface Shortcut {
 enum IPCHandler {
   FindCarThing = 'findCarThing',
   FindSetupCarThing = 'findSetupCarThing',
+  RebootCarThing = 'rebootCarThing',
   InstallApp = 'installApp',
   StartServer = 'startServer',
   StopServer = 'stopServer',
@@ -42,7 +43,8 @@ enum IPCHandler {
   DownloadLogs = 'downloadLogs',
   UploadScreensaverImage = 'uploadScreensaverImage',
   RemoveScreensaverImage = 'removeScreensaverImage',
-  HasCustomScreensaverImage = 'hasCustomScreensaverImage'
+  HasCustomScreensaverImage = 'hasCustomScreensaverImage',
+  UpdateWeather = 'updateWeather'
 }
 
 // Custom APIs for renderer
@@ -56,6 +58,8 @@ const api = {
   findCarThing: () => ipcRenderer.invoke(IPCHandler.FindCarThing),
   findSetupCarThing: () =>
     ipcRenderer.invoke(IPCHandler.FindSetupCarThing),
+  rebootCarThing: () =>
+    ipcRenderer.invoke(IPCHandler.RebootCarThing),
   installApp: () => ipcRenderer.invoke(IPCHandler.InstallApp),
   startServer: () => ipcRenderer.invoke(IPCHandler.StartServer),
   stopServer: () => ipcRenderer.invoke(IPCHandler.StopServer),
@@ -112,7 +116,8 @@ const api = {
   uploadScreensaverImage: () =>
     ipcRenderer.invoke(IPCHandler.UploadScreensaverImage),
   removeScreensaverImage: () =>
-    ipcRenderer.invoke(IPCHandler.RemoveScreensaverImage)
+    ipcRenderer.invoke(IPCHandler.RemoveScreensaverImage),
+  updateWeather: () => ipcRenderer.invoke(IPCHandler.UpdateWeather)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

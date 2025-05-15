@@ -1,0 +1,200 @@
+.lyricsWidget {
+  justify-content: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-radius: 20px;
+  background: var(--lyrics-color-background);
+}
+
+.lyricsTopPadding,
+.lyricsBottomPadding {
+  min-height: 50vh;
+}
+
+.lyricsWidgetContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.lyricsContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: flex-start;
+  z-index: 1;
+  padding: 10px;
+  height: 100%;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  border-radius: 20px;
+  background: linear-gradient(to bottom, transparent 0, var(--lyrics-color-background) 100%);
+}
+
+.header {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
+  z-index: 2;
+}
+
+.trackTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artist {
+  font-size: 1rem;
+  opacity: 0.8;
+  margin-bottom: 16px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyLyrics {
+  height: 100%;
+  width: 100%;
+}
+
+.lyricsContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: self-start;
+  overflow-y: auto;
+  text-align: left;
+  padding: 10px;
+  max-height: 100%;
+  scroll-padding: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  scroll-behavior: smooth;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  will-change: scroll-position;
+  transform: translateZ(0);
+  contain: paint style;
+  touch-action: pan-y;
+  scroll-snap-type: y;
+}
+
+.lyricsContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lyricsContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lyricsContent::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.line {
+  margin: 4px 0;
+  font-size: 1.3rem;
+  font-weight: bold;
+  line-height: 1.5;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  padding: 4px 8px;
+  color: var(--lyrics-color-inactive);
+}
+
+.activeLine {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: var(--lyrics-color-active);
+  opacity: 1;
+  -webkit-transition: all .1s ease-out;
+  transition: all .1s ease-out
+}
+
+.passedLine {
+  color: var(--lyrics-color-passed);
+}
+
+.introLine {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 1rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.errorMessage {
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.errorInfo {
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+  text-align: center;
+  opacity: 0.8;
+  color: var(--lyrics-color-messaging);
+}
+
+.retryButton {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  font-style: italic;
+  opacity: 0.8;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+:root {
+  --lyrics-color-active: #ffffff;
+  --lyrics-color-inactive: #cdcdcd;
+  --lyrics-color-passed: #ffffff;
+  --lyrics-color-background: #111;
+  --lyrics-color-messaging: #ffffff;
+}

@@ -98,6 +98,7 @@
     opacity: 0;
     transform: translateX(10px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -415,4 +416,28 @@
   background-color: rgba(255, 0, 0, 0.1);
   border-left: 3px solid #ff4040;
   color: #ff6b6b;
+}
+
+.coordinatesInput {
+  display: flex;
+  flex-direction: column;
+}
+
+.coordinatesInput .description {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.coordinatesInput .form {
+  display: flex;
+  justify-content: space-around;
+}
+
+.coordinatesInput .form input {
+  width: 100%;
+}
+
+.coordinatesInput .form button {
+  flex: 1;
+  width: 100%;
 }

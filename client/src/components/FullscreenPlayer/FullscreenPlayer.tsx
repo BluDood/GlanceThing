@@ -8,6 +8,7 @@ import React, {
 } from 'react'
 
 import { MediaContext } from '@/contexts/MediaContext.tsx'
+import { AppSettingsContext } from '@/contexts/AppSettingsContext.tsx'
 
 import styles from './FullescreenPlayer.module.css'
 
@@ -22,6 +23,7 @@ const FullescreenPlayer: React.FC<FullescreenPlayerProps> = ({
 }) => {
   const { image, playerData, playerDataRef, actions } =
     useContext(MediaContext)
+  const { showNothingPlayingNote } = useContext(AppSettingsContext)
 
   const playerRef = useRef<HTMLDivElement>(null)
 
@@ -130,11 +132,11 @@ const FullescreenPlayer: React.FC<FullescreenPlayerProps> = ({
       </button>
       {playerData ? (
         <>
-          <img src={image || ''} alt="" className={styles.background} />
+          <img src={image} alt="" className={styles.background} />
           <div className={styles.track}>
             <div className={styles.cover}>
               {image ? (
-                <img src={image || ''} alt="" />
+                <img src={image} alt="" />
               ) : (
                 <span className="material-icons">music_note</span>
               )}
@@ -223,9 +225,11 @@ const FullescreenPlayer: React.FC<FullescreenPlayerProps> = ({
         <div className={styles.notPlaying}>
           <span className="material-icons">music_note</span>
           <p className={styles.title}>Nothing playing!</p>
-          <p className={styles.note}>
-            Start playing something on your computer.
-          </p>
+          {showNothingPlayingNote && (
+            <p className={styles.note}>
+              Start playing something on your computer.
+            </p>
+          )}
         </div>
       )}
     </div>

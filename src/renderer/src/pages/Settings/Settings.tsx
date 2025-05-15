@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom'
 enum Tab {
   General,
   Client,
+  Weather,
   Appearance,
   Startup,
   Advanced,
@@ -71,6 +72,13 @@ const Settings: React.FC = () => {
               Client
             </button>
             <button
+              onClick={() => setCurrentTab(Tab.Weather)}
+              data-active={currentTab === Tab.Weather}
+            >
+              <span className="material-icons">cloud</span>
+              Weather
+            </button>
+            <button
               onClick={() => setCurrentTab(Tab.Appearance)}
               data-active={currentTab === Tab.Appearance}
             >
@@ -115,6 +123,8 @@ const Settings: React.FC = () => {
               <GeneralTab />
             ) : currentTab === Tab.Client ? (
               <ClientTab />
+            ) : currentTab === Tab.Weather ? (
+              <WeatherTab />
             ) : currentTab === Tab.Appearance ? (
               <AppearanceTab />
             ) : currentTab === Tab.Startup ? (
@@ -225,31 +235,97 @@ const SliderSetting: React.FC<{
   onChange,
   onRelease
 }) => {
-  return (
-    <div className={styles.sliderSetting} data-disabled={disabled}>
-      <div className={styles.text}>
-        <p className={styles.label}>{label}</p>
-        <p className={styles.description}>{description}</p>
+    return (
+      <div className={styles.sliderSetting} data-disabled={disabled}>
+        <div className={styles.text}>
+          <p className={styles.label}>{label}</p>
+          <p className={styles.description}>{description}</p>
+        </div>
+        <input
+          type="range"
+          defaultValue={defaultValue}
+          value={value}
+          min={min}
+          max={max}
+          step={step}
+          onChange={
+            onChange ? e => onChange(Number(e.target.value)) : undefined
+          }
+          onMouseUp={
+            onRelease
+              ? e => onRelease(Number(e.currentTarget.value))
+              : undefined
+          }
+        />
       </div>
-      <input
-        type="range"
-        defaultValue={defaultValue}
-        value={value}
-        min={min}
-        max={max}
-        step={step}
-        onChange={
-          onChange ? e => onChange(Number(e.target.value)) : undefined
-        }
-        onMouseUp={
-          onRelease
-            ? e => onRelease(Number(e.currentTarget.value))
-            : undefined
-        }
-      />
-    </div>
-  )
-}
+    )
+  }
+
+const CoordinatesInputSetting: React.FC<{
+  label: string
+  description?: string
+  latDefaultValue?: string
+  longDefaultValue?: string
+  latValue?: string
+  longValue?: string
+  submitLabel?: string
+  onChange?: (value: string) => void
+  onSubmit: (latValue: string, longValue: string) => void
+  disabled?: boolean
+}> = ({
+  label,
+  description,
+  latDefaultValue,
+  longDefaultValue,
+  latValue,
+  longValue,
+  submitLabel,
+  onChange,
+  onSubmit,
+  disabled
+}) => {
+    const latInput = useRef<HTMLInputElement>(null)
+    const longInput = useRef<HTMLInputElement>(null)
+
+    return (
+      <div className={styles.coordinatesInput}>
+        <div className={styles.text}>
+          <p className={styles.label}>{label}</p>
+          <p className={styles.description}>{description}</p>
+        </div>
+        <div className={styles.form}>
+          <input
+            type='text'
+            defaultValue={latDefaultValue}
+            value={latValue}
+            disabled={disabled}
+            onChange={
+              onChange ? e => onChange(e.target.value) : undefined
+            }
+            ref={latInput}
+            placeholder='Latitude'
+          />
+          <input
+            type='text'
+            defaultValue={longDefaultValue}
+            value={longValue}
+            disabled={disabled}
+            onChange={
+              onChange ? e => onChange(e.target.value) : undefined
+            }
+            ref={longInput}
+            placeholder='Longitude'
+          />
+          <button
+            disabled={disabled}
+            onClick={() => onSubmit(latInput?.current!.value, longInput?.current!.value)}
+          >
+            {submitLabel || 'Submit'}
+          </button>
+        </div>
+      </div>
+    )
+  }
 
 const GeneralTab: React.FC = () => {
   const navigate = useNavigate()
@@ -306,6 +382,18 @@ const ClientTab: React.FC = () => {
     autoBrightness?: boolean
     brightness?: number
     sleepMethod?: string
+    showStatusBar?: boolean
+    showTimeWidget?: boolean
+    showWeatherWidget?: boolean
+    showAppsWidget?: boolean
+    showControlsWidget?: boolean
+    showLyricsWidget?: boolean
+    showNothingPlayingNote?: boolean
+    showTimeOnScreensaver?: boolean
+    screensaverTimePosition?: string
+    autoSwitchToLyrics?: boolean
+    showTimeInStatusBar?: boolean
+    showWeatherInStatusBar?: boolean
   }>({})
 
   const [autoBrightness, setAutoBrightness] = useState(false)
@@ -328,7 +416,42 @@ const ClientTab: React.FC = () => {
         brightness: ((await window.api.getStorageValue('brightness')) ??
           0.5) as number,
         sleepMethod: ((await window.api.getStorageValue('sleepMethod')) ||
-          'sleep') as string
+          'sleep') as string,
+        showStatusBar:
+          ((await window.api.getStorageValue('showStatusBar')) ??
+            true) === true,
+        showTimeWidget:
+          ((await window.api.getStorageValue('showTimeWidget')) ??
+            true) === true,
+        showWeatherWidget:
+          ((await window.api.getStorageValue('showWeatherWidget')) ??
+            true) === true,
+        showAppsWidget:
+          ((await window.api.getStorageValue('showAppsWidget')) ??
+            true) === true,
+        showControlsWidget:
+          ((await window.api.getStorageValue('showControlsWidget')) ??
+            true) === true,
+        showLyricsWidget:
+          ((await window.api.getStorageValue('showLyricsWidget')) ??
+            true) === true,
+        showNothingPlayingNote:
+          ((await window.api.getStorageValue('showNothingPlayingNote')) ??
+            true) === true,
+        showTimeOnScreensaver:
+          ((await window.api.getStorageValue('showTimeOnScreensaver')) ??
+            true) === true,
+        screensaverTimePosition:
+          (await window.api.getStorageValue('screensaverTimePosition') || 'bottom-right') as string,
+        autoSwitchToLyrics:
+          ((await window.api.getStorageValue('autoSwitchToLyrics')) ??
+            false) === true,
+        showTimeInStatusBar:
+          ((await window.api.getStorageValue('showTimeInStatusBar')) ??
+            true) === true,
+        showWeatherInStatusBar:
+          ((await window.api.getStorageValue('showWeatherInStatusBar')) ??
+            true) === true
       }
       setAutoBrightness(settings.current.autoBrightness ?? false)
       setSleepMethod(settings.current.sleepMethod ?? 'sleep')
@@ -360,6 +483,91 @@ const ClientTab: React.FC = () => {
   return (
     loaded && (
       <div className={styles.settingsTab}>
+        <h3>Status Bar</h3>
+        <ToggleSetting
+          label="Status Bar"
+          description="Show the status bar at the top of the screen"
+          defaultValue={settings.current.showStatusBar ?? true}
+          onChange={value =>
+            window.api.setStorageValue('showStatusBar', value)
+          }
+        />
+        <ToggleSetting
+          label="Time in Status Bar"
+          description="Show the time in the status bar"
+          defaultValue={settings.current.showTimeInStatusBar ?? true}
+          onChange={value =>
+            window.api.setStorageValue('showTimeInStatusBar', value)
+          }
+        />
+        <ToggleSetting
+          label="Weather in Status Bar"
+          description="Show the weather in the status bar"
+          defaultValue={settings.current.showWeatherInStatusBar ?? true}
+          onChange={value =>
+            window.api.setStorageValue('showWeatherInStatusBar', value)
+          }
+        />
+        <h3>Widget</h3>
+        <ToggleSetting
+          label="Time Widget"
+          description="Show the time widget on the home screen"
+          defaultValue={settings.current.showTimeWidget ?? true}
+          onChange={value =>
+            window.api.setStorageValue('showTimeWidget', value)
+          }
+        />
+        <ToggleSetting
+          label="Weather Widget"
+          description="Show the weather widget on the home screen"
+          defaultValue={settings.current.showWeatherWidget ?? true}
+          onChange={value =>
+            window.api.setStorageValue('showWeatherWidget', value)
+          }
+        />
+        <ToggleSetting
+          label="Apps Widget"
+          description="Show the apps widget on the home screen"
+          defaultValue={settings.current.showAppsWidget ?? true}
+          onChange={value =>
+            window.api.setStorageValue('showAppsWidget', value)
+          }
+        />
+        <ToggleSetting
+          label="Controls Widget"
+          description="Show the controls widget on the home screen"
+          defaultValue={settings.current.showControlsWidget ?? true}
+          onChange={value =>
+            window.api.setStorageValue('showControlsWidget', value)
+          }
+        />
+        <ToggleSetting
+          label="Lyrics Widget"
+          description="Show the lyrics widget on the home screen"
+          defaultValue={settings.current.showLyricsWidget ?? true}
+          onChange={value =>
+            window.api.setStorageValue('showLyricsWidget', value)
+          }
+        />
+        <ToggleSetting
+          label="Auto Switch to Lyrics"
+          description="Automatically switch to the lyrics section when a song with lyrics is playing"
+          defaultValue={settings.current.autoSwitchToLyrics ?? false}
+          onChange={value =>
+            window.api.setStorageValue('autoSwitchToLyrics', value)
+          }
+        />
+        <h3>Display</h3>
+        <ToggleSetting
+          label="Nothing Playing Note"
+          description="Show the 'Start playing something on your computer' note in the Player widget"
+          defaultValue={settings.current.showNothingPlayingNote ?? true}
+          onChange={value =>
+            window.api.setStorageValue('showNothingPlayingNote', value)
+          }
+        />
+
+        <h3>Time Settings</h3>
         <SelectSetting
           label="Time Format"
           description="Displayed time format in the titlebar"
@@ -384,6 +592,8 @@ const ClientTab: React.FC = () => {
             window.api.setStorageValue('dateFormat', value as string)
           }
         />
+
+        <h3>Brightness</h3>
         <ToggleSetting
           label="Auto Brightness"
           description="Automatically adjust the brightness"
@@ -405,6 +615,8 @@ const ClientTab: React.FC = () => {
             window.api.setStorageValue('brightness', value as number)
           }
         />
+
+        <h3>Device</h3>
         <SelectSetting
           label="Sleep Method"
           description="Method used for putting the CarThing to sleep"
@@ -424,6 +636,33 @@ const ClientTab: React.FC = () => {
 
         {sleepMethod === 'screensaver' && (
           <div className={styles.screensaverSettings}>
+            <ToggleSetting
+              label="Show Time on Screensaver"
+              description="Display current time when screensaver is active"
+              defaultValue={settings.current.showTimeOnScreensaver ?? true}
+              onChange={value => {
+                window.api.setStorageValue('showTimeOnScreensaver', value)
+              }}
+            />
+            {settings.current.showTimeOnScreensaver && (
+              <SelectSetting
+                label="Time Position"
+                description="Choose where to display the time on the screensaver"
+                defaultValue={settings.current.screensaverTimePosition || 'bottom-right'}
+                options={[
+                  { value: 'bottom-right', label: 'Bottom Right' },
+                  { value: 'bottom-left', label: 'Bottom Left' },
+                  { value: 'bottom-center', label: 'Bottom Center' },
+                  { value: 'top-right', label: 'Top Right' },
+                  { value: 'top-left', label: 'Top Left' },
+                  { value: 'top-center', label: 'Top Center' },
+                  { value: 'center', label: 'Center' }
+                ]}
+                onChange={value => {
+                  window.api.setStorageValue('screensaverTimePosition', value as string)
+                }}
+              />
+            )}
             <div className={styles.header}>
               <div className={styles.text}>
                 <p className={styles.label}>Custom Screensaver Image</p>
@@ -546,6 +785,155 @@ const Patch: React.FC<{
         </button>
       )}
     </div>
+  )
+}
+
+const WeatherTab: React.FC = () => {
+  const [loaded, setLoaded] = useState(false);
+  const [update, setUpdate] = useState(false);
+  const [updateError, setUpdateError] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState<string>('');
+  const settings = useRef<{
+    latitude?: number
+    longitude?: number
+    temperatureUnit?: string
+    locationFormat?: string
+    showTempUnit?: boolean
+  }>({});
+
+  useEffect(() => {
+    async function loadSettings() {
+      settings.current = {
+        latitude: ((await window.api.getStorageValue('latitude')) ?? null) as number,
+        longitude: ((await window.api.getStorageValue('longitude')) ?? null) as number,
+        temperatureUnit: ((await window.api.getStorageValue('temperatureUnit')) || 'celsius') as string,
+        locationFormat: ((await window.api.getStorageValue('locationFormat')) || 'locality-city') as string,
+        showTempUnit: ((await window.api.getStorageValue('showTempUnit')) ?? true) as boolean,
+      }
+      setLoaded(true)
+    }
+
+    loadSettings()
+  }, [])
+
+  async function handleCoordinatesSubmit(latitude: string, longitude: string) {
+    setUpdate(true)
+    setUpdateError(false)
+    setUpdateMessage('')
+
+    if (!latitude.trim() && !longitude.trim()) {
+      await window.api.setStorageValue('latitude', null)
+      await window.api.setStorageValue('longitude', null)
+
+      try {
+        const res = await window.api.updateWeather()
+        if (!res) throw new Error('Failed to update weather')
+        setUpdateMessage('Using IP geolocation to determine your location')
+      } catch (error) {
+        setUpdateError(true)
+        setUpdateMessage(error instanceof Error ? error.message : 'Error updating weather')
+      } finally {
+        setUpdate(false)
+      }
+      return
+    }
+
+    // Check if only one field is empty (which is invalid)
+    if ((!latitude.trim() && longitude.trim()) || (latitude.trim() && !longitude.trim())) {
+      setUpdateError(true)
+      setUpdateMessage('Please provide both latitude and longitude, or leave both empty for automatic detection')
+      setUpdate(false)
+      return
+    }
+
+    const numLat = Number(latitude)
+    const numLong = Number(longitude)
+
+    // Check if values are valid numbers
+    if (isNaN(numLat) || isNaN(numLong)) {
+      setUpdateError(true)
+      setUpdateMessage('Invalid coordinates, please enter numeric values')
+      setUpdate(false)
+      return
+    }
+
+    // Check if values are in valid range
+    if (numLat < -90 || numLat > 90 || numLong < -180 || numLong > 180) {
+      setUpdateError(true)
+      setUpdateMessage('Coordinates out of valid range: latitude must be between -90 and 90, longitude between -180 and 180')
+      setUpdate(false)
+      return
+    }
+
+    await window.api.setStorageValue('latitude', numLat)
+    await window.api.setStorageValue('longitude', numLong)
+    try {
+      const res = await window.api.updateWeather()
+      if (!res) throw new Error('Failed to update weather')
+      setUpdateMessage('Location updated successfully')
+    } catch (error) {
+      setUpdateError(true)
+      setUpdateMessage(error instanceof Error ? error.message : 'Error updating weather')
+    } finally {
+      setUpdate(false)
+    }
+  }
+
+  return (
+    loaded && (
+      <div className={styles.settingsTab}>
+        <CoordinatesInputSetting
+          label="Location Coordinates"
+          description="Enter latitude and longitude coordinates for weather information. Leave both fields empty to use ip address detection."
+          latDefaultValue={settings.current.latitude?.toString()}
+          longDefaultValue={settings.current.longitude?.toString()}
+          onSubmit={handleCoordinatesSubmit}
+          submitLabel="Update"
+          disabled={update}
+        />
+        <SelectSetting
+          label="Temperature Unit"
+          description="Choose between Celsius and Fahrenheit for temperature display"
+          defaultValue={settings.current.temperatureUnit}
+          options={[
+            { value: 'celsius', label: 'Celsius (°C)' },
+            { value: 'fahrenheit', label: 'Fahrenheit (°F)' }
+          ]}
+          onChange={value => {
+            window.api.setStorageValue('temperatureUnit', value as string);
+            window.api.updateWeather();
+          }}
+        />
+        <ToggleSetting
+          label="Show Temperature Unit"
+          description="Display the temperature unit (°C/°F) on the weather widget"
+          defaultValue={settings.current.showTempUnit ?? true}
+          onChange={value => {
+            window.api.setStorageValue('showTempUnit', value)
+          }}
+        />
+        <SelectSetting
+          label="Location Format"
+          description="Choose how location information is displayed"
+          defaultValue={settings.current.locationFormat}
+          options={[
+            { value: 'none', label: 'No dispaly' },
+            { value: 'city', label: 'City' },
+            { value: 'city-locality', label: 'City, Locality' },
+            { value: 'locality', label: 'Locality' },
+            { value: 'locality-city', label: 'Locality, City' }
+          ]}
+          onChange={value => {
+            window.api.setStorageValue('locationFormat', value as string);
+            window.api.updateWeather();
+          }}
+        />
+        {update &&
+          <Loader />
+        }
+        <div className={updateError ? styles.error : styles.success}>{updateMessage}</div>
+      </div>
+    )
   )
 }
 

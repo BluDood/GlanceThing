@@ -12,7 +12,11 @@ interface App {
   path: string
 }
 
-const Apps: React.FC = () => {
+interface AppsProps {
+  visible?: boolean
+}
+
+const Apps: React.FC<AppsProps> = ({ visible }) => {
   const { ready, socket } = useContext(SocketContext)
 
   const appsRef = useRef<HTMLDivElement>(null)
@@ -121,6 +125,7 @@ const Apps: React.FC = () => {
       onKeyDown={onKeyDown}
       onFocus={onFocus}
       ref={appsRef}
+      visible={visible}
     >
       {apps ? (
         apps.length > 0 ? (

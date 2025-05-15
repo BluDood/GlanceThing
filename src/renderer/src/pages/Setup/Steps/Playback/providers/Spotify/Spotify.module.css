@@ -124,6 +124,7 @@
 }
 
 .buttons button {
+  margin: 0 10px;
   animation: appearH 500ms ease;
 }
 

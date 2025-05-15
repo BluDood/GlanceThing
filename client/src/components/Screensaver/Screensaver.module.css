@@ -135,3 +135,77 @@
   transition: opacity 0.3s ease-in-out;
   opacity: 1;
 }
+
+.timeContainer {
+  position: absolute;
+  animation: fadeIn 1s ease-out;
+  z-index: 10;
+  /* Default position (for fallback) */
+  bottom: 30px;
+  right: 30px;
+  text-align: right;
+}
+
+/* Position variations */
+.bottom-right {
+  bottom: 30px;
+  right: 30px;
+  text-align: right;
+}
+
+.bottom-left {
+  bottom: 30px;
+  left: 30px;
+  text-align: left;
+}
+
+.bottom-center {
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.top-right {
+  top: 30px;
+  right: 30px;
+  text-align: right;
+}
+
+.top-left {
+  top: 30px;
+  left: 30px;
+  text-align: left;
+}
+
+.top-center {
+  top: 30px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.center {
+  top: 50%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  transform: translateY(-50%);
+}
+
+.timeDisplay {
+  font-size: 4rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.dateDisplay {
+  font-size: 1.8rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1px;
+  margin-top: 5px;
+}

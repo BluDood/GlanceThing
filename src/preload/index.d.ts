@@ -16,6 +16,7 @@ declare global {
       findSetupCarThing: () => Promise<
         'not_found' | 'not_installed' | 'ready'
       >
+      rebootCarThing: () => Promise<void>
       installApp: () => Promise<string | true>
       startServer: () => Promise<void>
       stopServer: () => Promise<void>
@@ -61,6 +62,7 @@ declare global {
       }>
       removeScreensaverImage: () => Promise<boolean>
       hasCustomScreensaverImage: () => Promise<boolean>
+      updateWeather: () => Promise<boolean>
     }
   }
 }

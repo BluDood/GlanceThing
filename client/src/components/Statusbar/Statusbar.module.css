@@ -2,6 +2,9 @@
   display: flex;
   background: #111;
   padding: 8px 12px;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 55px;
 }
 
 .timedate {
@@ -13,4 +16,45 @@
   font-weight: 700;
   font-size: 1.2em;
   margin-right: 15px;
+}
+
+.weather {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.weather:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.weatherIcon {
+  font-size: 1.2em;
+}
+
+.temperature {
+  font-weight: 600;
+}
+
+.minMax {
+  display: flex;
+  gap: 6px;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.tempMin {
+  color: #88c0ff;
+}
+
+.tempMax {
+  color: #ff9e7d;
+}
+
+.empty {
+  height: 1px;
 }

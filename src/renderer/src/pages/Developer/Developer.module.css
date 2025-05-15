@@ -10,6 +10,13 @@
 .buttons {
   display: flex;
   gap: 10px;
+  align-items: center;
+}
+
+.successMessage {
+  color: #4CAF50;
+  margin-left: 10px;
+  font-weight: 500;
 }
 
 @keyframes appear {

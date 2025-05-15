@@ -242,6 +242,18 @@ export async function restore(device: string | null, restart = true) {
   if (restart) await restartChromium(device)
 }
 
+export async function rebootCarThing(device: string | null) {
+  if (!device) device = await findCarThing()
+  if (!device) throw new Error('No valid CarThing found')
+
+  const adb = await getAdbExecutable()
+
+  log('Reboot...', 'adb', LogLevel.DEBUG)
+  await execAsync(
+    `${adb} -s ${device} shell "reboot"`
+  )
+}
+
 export async function installApp(device: string | null) {
   if (!device) device = await findCarThing()
   if (!device) throw new Error('No valid CarThing found')

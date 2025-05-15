@@ -1,7 +1,6 @@
 .player {
   flex: 1;
-  padding: 16px;
-  padding-top: 28px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -19,25 +18,10 @@
   overflow: hidden;
 }
 
-.player .cover .image {
-  height: 100%;
-  display: flex;
-}
-
-.player .cover .image img {
-  height: 100%;
-  width: 100%;
+.player .cover img {
+  border-radius: 20px;
   transition: filter 200ms ease;
-}
-
-.player .cover .image span {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 80px;
-  background: #222;
+  max-width: 100%;
 }
 
 .player .cover .action {
@@ -77,17 +61,51 @@
 .player .name {
   font-size: 1.2em;
   font-weight: bold;
-  margin-top: 10px;
+  width: 100%;
+  white-space: nowrap;
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
+  position: relative;
+  margin-top: 5px;
+  height: 40px;
+  color: #fff;
+}
+
+.player .name span, .player .artists span {
+  display: inline-block;
+  position: relative;
+  white-space: nowrap;
+  overflow: visible;
+  will-change: transform;
+}
+
+.player .name, .player .artists {
+  overflow: hidden;
+  position: relative;
+}
+
+.player .name span, .player .artists span {
+  text-align: left;
+  transform: translateX(0);
+  will-change: transform;
+  transition: transform 0.1s linear;
+}
+
+@media (max-width: 450px) {
+  .center {
+    width: 100%;
+    padding: 20px;
+  }
 }
 
 .player .artists {
   font-size: 0.8em;
   color: #aaa;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+  margin-top: 5px;
+  height: 26px;
 }
 
 .controls {
@@ -97,7 +115,7 @@
 .controls button {
   all: unset;
   display: flex;
-  padding: 12px;
+  padding: 5px;
   z-index: 999;
 }
 
@@ -122,7 +140,7 @@
 
 .progress .slider .fill {
   height: 100%;
-  background: #0064ff;
+  background: var(--color-primary);
   transition: width 200ms ease;
 }
 
@@ -162,7 +180,7 @@
 
 .volume .slider .fill {
   height: 100%;
-  background: #0064ff;
+  background: var(--color-primary);
   transition: width 200ms ease;
 }
 
@@ -197,4 +215,11 @@
   font-size: 20px;
   color: #aaa;
   max-width: 80%;
+}
+
+:root {
+  --color-primary: #0064ff;
+  --color-secondary: #111;
+  --color-tertiary: #ddd;
+  --color-quaternary: #aaa;
 }

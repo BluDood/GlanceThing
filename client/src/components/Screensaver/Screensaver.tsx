@@ -2,6 +2,8 @@ import React, { useCallback, useContext, useEffect, useState } from 'react'
 
 import { SleepState } from '@/contexts/SleepContext.tsx'
 import { SocketContext } from '@/contexts/SocketContext.tsx'
+import { AppSettingsContext } from '@/contexts/AppSettingsContext.tsx'
+import { TimeContext } from '@/contexts/TimeContext'
 
 import styles from './Screensaver.module.css'
 
@@ -13,6 +15,9 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 
 const Screensaver: React.FC<ScreensaverProps> = ({ type }) => {
   const { ready, socket } = useContext(SocketContext)
+  const { showTimeOnScreensaver, screensaverTimePosition } = useContext(AppSettingsContext)
+  const { time, date } = useContext(TimeContext)
+
   const [loaded, setLoaded] = useState(false)
   const [customImage, setCustomImage] = useState<string | null>(null)
 
@@ -69,6 +74,7 @@ const Screensaver: React.FC<ScreensaverProps> = ({ type }) => {
 
     const listener = (e: MessageEvent) => {
       const data = JSON.parse(e.data)
+
       if (data.type !== 'screensaver') return
 
       switch (data.action) {
@@ -114,7 +120,7 @@ const Screensaver: React.FC<ScreensaverProps> = ({ type }) => {
       socket.removeEventListener('message', listener)
       clearInterval(retryInterval)
     }
-  }, [ready, socket, customImage, requestImage, validateImage])
+  }, [ready, socket, customImage, requestImage, validateImage, showTimeOnScreensaver, type])
 
   useEffect(() => {
     if (type === 'screensaver') {
@@ -126,20 +132,37 @@ const Screensaver: React.FC<ScreensaverProps> = ({ type }) => {
     }
   }, [type])
 
+  const renderTimeDisplay = () => {
+    if (!showTimeOnScreensaver || type !== 'screensaver') return null
+
+    const positionClass = styles[screensaverTimePosition] || styles['bottom-right']
+
+    return (
+      <div className={`${styles.timeContainer} ${positionClass}`}>
+        <div className={styles.timeDisplay}>{time}</div>
+        <div className={styles.dateDisplay}>{date}</div>
+      </div>
+    )
+  }
+
   return (
     <div className={styles.screensaver} data-active={type !== 'off'}>
       {loaded && (
         <>
           {customImage ? (
-            <div
-              className={styles.customImage}
-              style={{ backgroundImage: `url(${customImage})` }}
-            ></div>
+            <>
+              <div
+                className={styles.customImage}
+                style={{ backgroundImage: `url(${customImage})` }}
+              ></div>
+              {renderTimeDisplay()}
+            </>
           ) : (
             <>
               <div className={styles.circle1}></div>
               <div className={styles.circle2}></div>
               <div className={styles.circle3}></div>
+              {renderTimeDisplay()}
             </>
           )}
         </>

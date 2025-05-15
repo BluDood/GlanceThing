@@ -34,3 +34,26 @@ export type PlaybackHandlerEvents = {
   close: () => void
   error: (err: Error) => void
 }
+
+export interface LyricsResponse {
+  lyrics?: {
+    syncType: string
+    lines: {
+      startTimeMs: string
+      endTimeMs: string
+      words: string
+      syllables?: {
+        startTimeMs: string;
+        endTimeMs: string;
+        text: string;
+      }[]
+    }
+  }
+  colors?: {
+    background: number
+    text: number
+    highlightText: number
+  }
+  hasVocalRemoval?: boolean
+  message?: string
+}

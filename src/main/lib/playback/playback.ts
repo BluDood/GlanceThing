@@ -8,7 +8,8 @@ import spotify from './spotify.js'
 import {
   PlaybackData,
   PlaybackHandlerEvents,
-  RepeatMode
+  RepeatMode,
+  LyricsResponse
 } from '../../types/Playback.js'
 import { log } from '../utils.js'
 import { getPlaybackHandlerConfig, setStorageValue } from '../storage.js'
@@ -107,6 +108,11 @@ class PlaybackManager extends (EventEmitter as new () => TypedEmitter<PlaybackHa
   async getImage(): Promise<Buffer | null> {
     if (!this.currentHandler) return null
     return this.currentHandler.getImage()
+  }
+
+  async getLyrics(): Promise<LyricsResponse | null> {
+    if (!this.currentHandler) return null
+    return this.currentHandler.getLyrics()
   }
 }
 

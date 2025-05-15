@@ -14,10 +14,26 @@ const Menu: React.FC = () => {
   const [shown, setShown] = useState(false)
   const shownRef = useRef(shown)
 
-  const [selected, setSelected] = useState(0)
-  const [restoring, setRestoring] = useState(false)
+  const [selected, setSelected] = useState(1)
+  const [restoring, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
 
   const elements = [
+    {
+      name: 'Restore',
+      icon: 'settings_backup_restore',
+      color: '#ff3838',
+      onClick: () => {
+        setLoading(true)
+        setMessage('Restoring...')
+        setShown(false)
+        socket?.send(
+          JSON.stringify({
+            type: 'restore'
+          })
+        )
+      }
+    },
     {
       name: 'Sleep',
       icon: 'bedtime',
@@ -32,15 +48,16 @@ const Menu: React.FC = () => {
       }
     },
     {
-      name: 'Restore',
-      icon: 'settings_backup_restore',
-      color: '#ff3838',
+      name: 'Reboot',
+      icon: 'restart_alt',
+      color: '#1565c0',
       onClick: () => {
-        setRestoring(true)
+        setLoading(true)
+        setMessage('Rebooting...')
         setShown(false)
         socket?.send(
           JSON.stringify({
-            type: 'restore'
+            type: 'reboot'
           })
         )
       }
@@ -51,10 +68,10 @@ const Menu: React.FC = () => {
     function listener(e: KeyboardEvent) {
       if (e.key === 'm') {
         setShown(s => !s)
-        ;(document.activeElement as HTMLElement)?.blur()
+          ; (document.activeElement as HTMLElement)?.blur()
         setTimeout(() => {
           if (!shownRef.current) {
-            setSelected(0)
+            setSelected(1)
           }
         }, 200)
       } else if (e.key === 'ArrowLeft' && shownRef.current) {
@@ -136,7 +153,7 @@ const Menu: React.FC = () => {
           ))}
         </div>
       </div>
-      {restoring && <RestoreScreen />}
+      {restoring && <RestoreScreen message={message} />}
     </>
   )
 }
