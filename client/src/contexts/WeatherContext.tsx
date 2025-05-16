@@ -1,4 +1,10 @@
-import { createContext, useState, useEffect, useCallback, useContext } from 'react'
+import {
+  createContext,
+  useState,
+  useEffect,
+  useCallback,
+  useContext
+} from 'react'
 import { SocketContext } from './SocketContext'
 import { AppSettingsContext } from './AppSettingsContext'
 import { getWeatherEmoji, getWeatherDescription } from '@/lib/weatherCodes'
@@ -31,14 +37,16 @@ const WeatherContext = createContext<WeatherContextValue>({
   weatherEmoji: '',
   weatherDescription: '',
   temperatureUnit: '',
-  refreshWeather: () => { }
+  refreshWeather: () => {}
 })
 
 interface WeatherProviderProps {
   children: React.ReactNode
 }
 
-const WeatherContextProvider: React.FC<WeatherProviderProps> = ({ children }) => {
+const WeatherContextProvider: React.FC<WeatherProviderProps> = ({
+  children
+}) => {
   const { ready, socket } = useContext(SocketContext)
   const { showTempUnit } = useContext(AppSettingsContext)
 
@@ -67,9 +75,13 @@ const WeatherContextProvider: React.FC<WeatherProviderProps> = ({ children }) =>
             if (data) {
               setWeather(data)
               setWeatherEmoji(getWeatherEmoji(data.weatherCode))
-              setWeatherDescription(getWeatherDescription(data.weatherCode))
+              setWeatherDescription(
+                getWeatherDescription(data.weatherCode)
+              )
               if (showTempUnit) {
-                setTemperatureUnit(data.temperatureUnit === 'fahrenheit' ? 'F' : 'C')
+                setTemperatureUnit(
+                  data.temperatureUnit === 'fahrenheit' ? 'F' : 'C'
+                )
               }
               setError(false)
             }
@@ -97,7 +109,11 @@ const WeatherContextProvider: React.FC<WeatherProviderProps> = ({ children }) =>
     refreshWeather
   }
 
-  return <WeatherContext.Provider value={value}>{children}</WeatherContext.Provider>
+  return (
+    <WeatherContext.Provider value={value}>
+      {children}
+    </WeatherContext.Provider>
+  )
 }
 
 export { WeatherContext, WeatherContextProvider }

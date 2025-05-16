@@ -1,4 +1,11 @@
-import { useContext, useEffect, useRef, useState, useMemo, useCallback } from 'react'
+import {
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback
+} from 'react'
 import { AppSettingsContext } from '@/contexts/AppSettingsContext.tsx'
 import { MediaContext } from '@/contexts/MediaContext.tsx'
 import { debouncedFunction } from '@/lib/utils.ts'
@@ -37,7 +44,9 @@ const Widgets: React.FC = () => {
   const [activeSection, setActiveSection] = useState(1)
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const [isUserScrolled, setIsUserScrolled] = useState(false)
-  const userScrollingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const userScrollingTimer = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  )
   const [currentTrackId, setCurrentTrackId] = useState<string | null>(null)
 
   const markUserInteracting = useCallback(() => {
@@ -54,29 +63,32 @@ const Widgets: React.FC = () => {
     }, 2000)
   }, [])
 
-  const handlePaginationClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    markUserInteracting()
+  const handlePaginationClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      markUserInteracting()
 
-    const target = e.target as HTMLElement
-    const indexStr = target.getAttribute('data-index')
-    if (indexStr) {
-      const index = parseInt(indexStr, 10)
-      if (index !== activeSection - 1) {
-        setActiveSection(index + 1)
+      const target = e.target as HTMLElement
+      const indexStr = target.getAttribute('data-index')
+      if (indexStr) {
+        const index = parseInt(indexStr, 10)
+        if (index !== activeSection - 1) {
+          setActiveSection(index + 1)
 
-        setTimeout(() => {
-          if (scrollRef.current) {
-            const sectionWidth = scrollRef.current.clientWidth
-            scrollRef.current.scrollTo({
-              left: index * sectionWidth,
-              behavior: 'smooth'
-            })
-          }
-        }, 0)
+          setTimeout(() => {
+            if (scrollRef.current) {
+              const sectionWidth = scrollRef.current.clientWidth
+              scrollRef.current.scrollTo({
+                left: index * sectionWidth,
+                behavior: 'smooth'
+              })
+            }
+          }, 0)
+        }
       }
-    }
-  }, [activeSection, markUserInteracting])
+    },
+    [activeSection, markUserInteracting]
+  )
 
   const updateActiveSection = useCallback(() => {
     if (!scrollRef.current) return
@@ -111,12 +123,22 @@ const Widgets: React.FC = () => {
     if (lyricsVisible) {
       list.push({
         components: [
-          <Lyrics key="lyrics" visible={lyricsVisible} sectionActive={false} />
+          <Lyrics
+            key="lyrics"
+            visible={lyricsVisible}
+            sectionActive={false}
+          />
         ]
       })
     }
     return list
-  }, [timeVisible, weatherVisible, appsVisible, controlsVisible, lyricsVisible])
+  }, [
+    timeVisible,
+    weatherVisible,
+    appsVisible,
+    controlsVisible,
+    lyricsVisible
+  ])
 
   const sections = useMemo(() => {
     return sectionsList.map((section, index) => {
@@ -136,7 +158,10 @@ const Widgets: React.FC = () => {
     })
   }, [sectionsList, lyricsVisible, activeSection])
 
-  const widgetsPanelVisible = useMemo(() => sections.length > 0, [sections.length])
+  const widgetsPanelVisible = useMemo(
+    () => sections.length > 0,
+    [sections.length]
+  )
 
   useEffect(() => {
     setTimeVisible(showTimeWidget)
@@ -144,38 +169,53 @@ const Widgets: React.FC = () => {
     setAppsVisible(showAppsWidget)
     setControlsVisible(showControlsWidget)
     setLyricsVisible(showLyricsWidget)
-  }, [showTimeWidget, showWeatherWidget, showAppsWidget, showControlsWidget, showLyricsWidget])
+  }, [
+    showTimeWidget,
+    showWeatherWidget,
+    showAppsWidget,
+    showControlsWidget,
+    showLyricsWidget
+  ])
 
-  const navigateToSection = useCallback((sectionIndex: number) => {
-    console.log(`Navigating to section ${sectionIndex + 1}, current: ${activeSection}`)
+  const navigateToSection = useCallback(
+    (sectionIndex: number) => {
+      console.log(
+        `Navigating to section ${sectionIndex + 1}, current: ${activeSection}`
+      )
 
-    setActiveSection(sectionIndex + 1)
-
-    setTimeout(() => {
-      if (!scrollRef.current) {
-        console.log('Scroll ref is null')
-        return
-      }
-
-      const sectionWidth = scrollRef.current.clientWidth
-      console.log(`Scrolling to ${sectionIndex * sectionWidth}px`)
-
-      scrollRef.current.scrollTo({
-        left: sectionIndex * sectionWidth,
-        behavior: 'smooth'
-      })
+      setActiveSection(sectionIndex + 1)
 
       setTimeout(() => {
-        const sectionElement = document.getElementById(`section-${sectionIndex + 1}`)
-        if (sectionElement) {
-          const firstSectionWidget = sectionElement.querySelector('#widget') as HTMLDivElement
-          if (firstSectionWidget) firstSectionWidget.focus()
-        } else {
-          console.log(`Couldn't find section-${sectionIndex + 1}`)
+        if (!scrollRef.current) {
+          console.log('Scroll ref is null')
+          return
         }
-      }, 100)
-    }, 10)
-  }, [activeSection])
+
+        const sectionWidth = scrollRef.current.clientWidth
+        console.log(`Scrolling to ${sectionIndex * sectionWidth}px`)
+
+        scrollRef.current.scrollTo({
+          left: sectionIndex * sectionWidth,
+          behavior: 'smooth'
+        })
+
+        setTimeout(() => {
+          const sectionElement = document.getElementById(
+            `section-${sectionIndex + 1}`
+          )
+          if (sectionElement) {
+            const firstSectionWidget = sectionElement.querySelector(
+              '#widget'
+            ) as HTMLDivElement
+            if (firstSectionWidget) firstSectionWidget.focus()
+          } else {
+            console.log(`Couldn't find section-${sectionIndex + 1}`)
+          }
+        }, 100)
+      }, 10)
+    },
+    [activeSection]
+  )
 
   useEffect(() => {
     if (activeSection > sections.length) {
@@ -191,7 +231,8 @@ const Widgets: React.FC = () => {
   }, [sections, lyricsVisible])
 
   const canSwitchToLyrics = useCallback(() => {
-    const hasLyrics = lyricsData?.lyrics?.lines && lyricsData.lyrics?.lines?.length > 0
+    const hasLyrics =
+      lyricsData?.lyrics?.lines && lyricsData.lyrics?.lines?.length > 0
     if (
       !autoSwitchToLyrics ||
       !lyricsVisible ||
@@ -226,7 +267,10 @@ const Widgets: React.FC = () => {
     const shouldSwitch = canSwitchToLyrics()
 
     if (shouldSwitch) {
-      if ((trackChanged && !isUserScrolled) || (!isUserScrolled && playerData.isPlaying)) {
+      if (
+        (trackChanged && !isUserScrolled) ||
+        (!isUserScrolled && playerData.isPlaying)
+      ) {
         console.log(`Auto-switching to lyrics section (${lyricsIndex})`)
 
         const switchTimeout = setTimeout(() => {
@@ -257,8 +301,7 @@ const Widgets: React.FC = () => {
         if (keyNum === 1) {
           const playerWidget = allWidgets[0] as HTMLDivElement
           if (playerWidget) playerWidget.focus()
-        }
-        else if (keyNum >= 2 && keyNum <= 4) {
+        } else if (keyNum >= 2 && keyNum <= 4) {
           const sectionIndex = keyNum - 2
 
           if (sectionIndex < sections.length) {
@@ -299,13 +342,20 @@ const Widgets: React.FC = () => {
       debouncedUpdate()
     }
 
-    scrollElement.addEventListener('scroll', handleScroll, { passive: true })
+    scrollElement.addEventListener('scroll', handleScroll, {
+      passive: true
+    })
 
     return () => {
       scrollElement.removeEventListener('scroll', handleScroll)
       debouncedUpdate.cancel()
     }
-  }, [activeSection, sections.length, updateActiveSection, markUserInteracting])
+  }, [
+    activeSection,
+    sections.length,
+    updateActiveSection,
+    markUserInteracting
+  ])
 
   useEffect(() => {
     if (activeSection > sections.length && sections.length > 0) {
@@ -327,25 +377,31 @@ const Widgets: React.FC = () => {
   return (
     <div
       className={`${styles.widgets} ${showStatusBar ? styles.withStatusBar : ''}`}
-      ref={widgetsRef}>
-      <div className={`${styles.player} ${widgetsPanelVisible ? styles.withWidgetsPanel : ''}`}>
+      ref={widgetsRef}
+    >
+      <div
+        className={`${styles.player} ${widgetsPanelVisible ? styles.withWidgetsPanel : ''}`}
+      >
         <Player />
       </div>
       {widgetsPanelVisible && (
         <div className={styles.widgetsPanel}>
           <div className={styles.scroll} ref={scrollRef}>
             {sections.map((section, index) => (
-              <div key={`section-${index + 1}`} className={styles.column} id={`section-${index + 1}`}>
-                {section.components.map((component) => (
-                  component
-                ))}
+              <div
+                key={`section-${index + 1}`}
+                className={styles.column}
+                id={`section-${index + 1}`}
+              >
+                {section.components.map(component => component)}
               </div>
             ))}
           </div>
           {sections.length > 1 && (
             <div
               className={styles.pagination}
-              onClick={handlePaginationClick}>
+              onClick={handlePaginationClick}
+            >
               {sections.map((_, index) => {
                 const isActive = activeSection === index + 1
                 return (

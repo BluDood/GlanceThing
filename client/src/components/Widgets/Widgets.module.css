@@ -56,7 +56,7 @@
   scroll-timeline-axis: x;
 }
 
-.scroll>.column {
+.scroll > .column {
   scroll-snap-align: start;
   min-width: 100%;
   contain: paint layout;

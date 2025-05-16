@@ -1,4 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState
+} from 'react'
 import { SocketContext } from './SocketContext.tsx'
 
 interface AppSettings {
@@ -39,7 +44,7 @@ const defaultSettings: AppSettings = {
 
 const AppSettingsContext = createContext<AppSettingsContextProps>({
   ...defaultSettings,
-  setSettings: () => { }
+  setSettings: () => {}
 })
 
 interface AppSettingsContextProviderProps {
@@ -50,7 +55,8 @@ const AppSettingsContextProvider = ({
   children
 }: AppSettingsContextProviderProps) => {
   const { ready, socket } = useContext(SocketContext)
-  const [settings, setSettingsState] = useState<AppSettings>(defaultSettings)
+  const [settings, setSettingsState] =
+    useState<AppSettings>(defaultSettings)
 
   const setSettings = (newSettings: Partial<AppSettings>) => {
     setSettingsState(prev => ({
@@ -59,10 +65,12 @@ const AppSettingsContextProvider = ({
     }))
 
     if (socket?.readyState === 1) {
-      socket.send(JSON.stringify({
-        type: 'setting',
-        data: newSettings
-      }))
+      socket.send(
+        JSON.stringify({
+          type: 'setting',
+          data: newSettings
+        })
+      )
     }
   }
 
@@ -71,7 +79,7 @@ const AppSettingsContextProvider = ({
       const listener = (e: MessageEvent) => {
         try {
           const { type, data } = JSON.parse(e.data)
-          if (type !== 'setting') return;
+          if (type !== 'setting') return
 
           if (data) {
             setSettingsState(prev => ({

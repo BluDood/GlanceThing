@@ -43,9 +43,9 @@ export interface LyricsResponse {
       endTimeMs: string
       words: string
       syllables?: {
-        startTimeMs: string;
-        endTimeMs: string;
-        text: string;
+        startTimeMs: string
+        endTimeMs: string
+        text: string
       }[]
     }
   }

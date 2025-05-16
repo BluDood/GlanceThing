@@ -70,7 +70,8 @@
   color: #fff;
 }
 
-.player .name span, .player .artists span {
+.player .name span,
+.player .artists span {
   display: inline-block;
   position: relative;
   white-space: nowrap;
@@ -78,12 +79,14 @@
   will-change: transform;
 }
 
-.player .name, .player .artists {
+.player .name,
+.player .artists {
   overflow: hidden;
   position: relative;
 }
 
-.player .name span, .player .artists span {
+.player .name span,
+.player .artists span {
   text-align: left;
   transform: translateX(0);
   will-change: transform;

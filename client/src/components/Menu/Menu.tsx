@@ -68,7 +68,7 @@ const Menu: React.FC = () => {
     function listener(e: KeyboardEvent) {
       if (e.key === 'm') {
         setShown(s => !s)
-          ; (document.activeElement as HTMLElement)?.blur()
+        ;(document.activeElement as HTMLElement)?.blur()
         setTimeout(() => {
           if (!shownRef.current) {
             setSelected(1)

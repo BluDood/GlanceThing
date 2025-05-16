@@ -6,8 +6,10 @@ import styles from './Statusbar.module.css'
 
 const Statusbar: React.FC = () => {
   const { time, date } = useContext(TimeContext)
-  const { weather ,weatherEmoji, temperatureUnit } = useContext(WeatherContext)
-  const { showTimeInStatusBar, showWeatherInStatusBar } = useContext(AppSettingsContext)
+  const { weather, weatherEmoji, temperatureUnit } =
+    useContext(WeatherContext)
+  const { showTimeInStatusBar, showWeatherInStatusBar } =
+    useContext(AppSettingsContext)
 
   return (
     <div className={styles.statusbar}>
@@ -19,15 +21,17 @@ const Statusbar: React.FC = () => {
       )}
       {showWeatherInStatusBar && weather && (
         <div className={styles.weather}>
-          <div className={styles.weatherIcon}>
-            {weatherEmoji}
-          </div>
+          <div className={styles.weatherIcon}>{weatherEmoji}</div>
           <div className={styles.temperature}>
             {weather.temperature}°{temperatureUnit}
           </div>
           <div className={styles.minMax}>
-            <span className={styles.tempMax}>↑{weather.maxTemperature}°</span>
-            <span className={styles.tempMin}>↓{weather.minTemperature}°</span>
+            <span className={styles.tempMax}>
+              ↑{weather.maxTemperature}°
+            </span>
+            <span className={styles.tempMin}>
+              ↓{weather.minTemperature}°
+            </span>
           </div>
         </div>
       )}

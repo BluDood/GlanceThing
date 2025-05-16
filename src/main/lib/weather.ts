@@ -2,10 +2,7 @@ import axios from 'axios'
 import { AuthenticatedWebSocket } from '../types/WebSocketServer.js'
 import { wss } from './server.js'
 import { getStorageValue } from './storage.js'
-import {
-  log,
-  LogLevel
-} from './utils.js'
+import { log, LogLevel } from './utils.js'
 
 export interface GeolocationResponse {
   latitude: number
@@ -33,7 +30,10 @@ export interface WeatherResponse {
   }
 }
 
-export async function fetchGeolocation(latitude?: number, longitude?: number): Promise<GeolocationResponse | null> {
+export async function fetchGeolocation(
+  latitude?: number,
+  longitude?: number
+): Promise<GeolocationResponse | null> {
   let url = 'https://api-bdc.io/data/reverse-geocode-client'
   const params = new URLSearchParams()
 
@@ -49,15 +49,26 @@ export async function fetchGeolocation(latitude?: number, longitude?: number): P
     const data: GeolocationResponse = await res.data
     return data
   } catch (error) {
-    log(`Fetch geolocation data error:${JSON.stringify(error)}`, 'Weather', LogLevel.ERROR)
+    log(
+      `Fetch geolocation data error:${JSON.stringify(error)}`,
+      'Weather',
+      LogLevel.ERROR
+    )
     return null
   }
 }
 
-export async function fetchWeather(latitude: number, longitude: number, unit?: string) {
+export async function fetchWeather(
+  latitude: number,
+  longitude: number,
+  unit?: string
+) {
   let url = `https://api.open-meteo.com/v1/forecast`
   const params = new URLSearchParams()
-  params.append('current', 'temperature_2m,weather_code,relative_humidity_2m')
+  params.append(
+    'current',
+    'temperature_2m,weather_code,relative_humidity_2m'
+  )
   params.append('forecast_days', '1')
   params.append('daily', 'temperature_2m_max,temperature_2m_min')
   params.append('timezone', 'auto')
@@ -101,28 +112,50 @@ export async function updateWeather(): Promise<boolean> {
     log('Update Weather', 'weather', LogLevel.DEBUG)
     let latitude = getStorageValue('latitude') as number | null
     let longitude = getStorageValue('longitude') as number | null
-    const temperatureUnit = getStorageValue('temperatureUnit') as string || 'celsius'
-    const locationFormat = getStorageValue('locationFormat') as string || 'locality-city'
+    const temperatureUnit =
+      (getStorageValue('temperatureUnit') as string) || 'celsius'
+    const locationFormat =
+      (getStorageValue('locationFormat') as string) || 'locality-city'
 
     const hasValidCoordinates =
-      typeof latitude === 'number' && !isNaN(latitude) &&
-      typeof longitude === 'number' && !isNaN(longitude) &&
-      latitude >= -90 && latitude <= 90 &&
-      longitude >= -180 && longitude <= 180;
+      typeof latitude === 'number' &&
+      !isNaN(latitude) &&
+      typeof longitude === 'number' &&
+      !isNaN(longitude) &&
+      latitude >= -90 &&
+      latitude <= 90 &&
+      longitude >= -180 &&
+      longitude <= 180
 
     if (!hasValidCoordinates) {
-      log('Coordinates not provided - using IP geolocation', 'Weather', LogLevel.DEBUG)
+      log(
+        'Coordinates not provided - using IP geolocation',
+        'Weather',
+        LogLevel.DEBUG
+      )
       const ipGeolocation = await fetchGeolocation()
 
-      if (!ipGeolocation || typeof ipGeolocation.latitude !== 'number' || typeof ipGeolocation.longitude !== 'number') {
-        throw new Error('Could not obtain valid coordinates for weather update')
+      if (
+        !ipGeolocation ||
+        typeof ipGeolocation.latitude !== 'number' ||
+        typeof ipGeolocation.longitude !== 'number'
+      ) {
+        throw new Error(
+          'Could not obtain valid coordinates for weather update'
+        )
       }
       latitude = ipGeolocation.latitude
       longitude = ipGeolocation.longitude
     }
-    if (typeof latitude !== 'number' || typeof longitude !== 'number' ||
-      isNaN(latitude) || isNaN(longitude)) {
-      throw new Error('Could not obtain valid coordinates for weather update')
+    if (
+      typeof latitude !== 'number' ||
+      typeof longitude !== 'number' ||
+      isNaN(latitude) ||
+      isNaN(longitude)
+    ) {
+      throw new Error(
+        'Could not obtain valid coordinates for weather update'
+      )
     }
 
     const data = await fetchWeather(latitude, longitude, temperatureUnit)
@@ -141,10 +174,16 @@ export async function updateWeather(): Promise<boolean> {
           location = geolocation.locality ?? ''
           break
         case 'city-locality':
-          location = geolocation.city && geolocation.locality ? `${geolocation.city}, ${geolocation.locality}` : ''
+          location =
+            geolocation.city && geolocation.locality
+              ? `${geolocation.city}, ${geolocation.locality}`
+              : ''
           break
         case 'locality-city':
-          location = geolocation.city && geolocation.locality ? `${geolocation.locality}, ${geolocation.city}` : ''
+          location =
+            geolocation.city && geolocation.locality
+              ? `${geolocation.locality}, ${geolocation.city}`
+              : ''
         default:
           break
       }
@@ -164,7 +203,11 @@ export async function updateWeather(): Promise<boolean> {
 
     return true
   } catch (error) {
-    log(`Fetch weather data error:${JSON.stringify(error)}`, 'Weather', LogLevel.ERROR)
+    log(
+      `Fetch weather data error:${JSON.stringify(error)}`,
+      'Weather',
+      LogLevel.ERROR
+    )
     return false
   }
 }

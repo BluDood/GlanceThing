@@ -229,9 +229,9 @@ export interface LyricsResponse {
       endTimeMs: string
       words: string
       syllables?: {
-        startTimeMs: string;
-        endTimeMs: string;
-        text: string;
+        startTimeMs: string
+        endTimeMs: string
+        text: string
       }[]
     }
   }
@@ -342,7 +342,8 @@ class SpotifyHandler extends BasePlaybackHandler {
   ws: WebSocket | null = null
   instance: AxiosInstance | null = null
 
-  lyricsCache: Map<string, { data: LyricsResponse, timestamp: number }> = new Map()
+  lyricsCache: Map<string, { data: LyricsResponse; timestamp: number }> =
+    new Map()
   lyricsCacheExpiration: number = 24 * 60 * 60 * 1000 // 24 hours
   cacheCleanupInterval: NodeJS.Timeout | null = null
   lyricsCacheStorageKey: string = 'spotify_lyrics_cache'
@@ -409,10 +410,13 @@ class SpotifyHandler extends BasePlaybackHandler {
       this.emit('open', this.name)
     }
 
-    this.cacheCleanupInterval = setInterval(() => {
-      this.cleanLyricsCache()
-      this.saveLyricsCache()
-    }, 60 * 60 * 1000)
+    this.cacheCleanupInterval = setInterval(
+      () => {
+        this.cleanLyricsCache()
+        this.saveLyricsCache()
+      },
+      60 * 60 * 1000
+    )
   }
 
   async start() {
@@ -485,23 +489,31 @@ class SpotifyHandler extends BasePlaybackHandler {
 
   cleanLyricsCache(): void {
     const now = Date.now()
-    let expiredCount = 0;
+    let expiredCount = 0
 
     for (const [trackId, entry] of this.lyricsCache.entries()) {
       if (now - entry.timestamp > this.lyricsCacheExpiration) {
         this.lyricsCache.delete(trackId)
-        expiredCount++;
+        expiredCount++
       }
     }
 
-    log(`Cleaned lyrics cache. Removed ${expiredCount} expired entries. Current size: ${this.lyricsCache.size} entries`, 'Spotify', LogLevel.DEBUG)
+    log(
+      `Cleaned lyrics cache. Removed ${expiredCount} expired entries. Current size: ${this.lyricsCache.size} entries`,
+      'Spotify',
+      LogLevel.DEBUG
+    )
   }
 
   saveLyricsCache(): void {
     try {
       const cacheEntries = Array.from(this.lyricsCache.entries())
       setStorageValue(this.lyricsCacheStorageKey, cacheEntries)
-      log(`Saved lyrics cache with ${cacheEntries.length} entries`, 'Spotify', LogLevel.DEBUG)
+      log(
+        `Saved lyrics cache with ${cacheEntries.length} entries`,
+        'Spotify',
+        LogLevel.DEBUG
+      )
     } catch (error) {
       log(`Error saving lyrics cache: ${error}`, 'Spotify', LogLevel.ERROR)
     }
@@ -512,18 +524,30 @@ class SpotifyHandler extends BasePlaybackHandler {
       const cachedData = getStorageValue(this.lyricsCacheStorageKey)
       if (cachedData && Array.isArray(cachedData)) {
         this.lyricsCache = new Map(cachedData)
-        log(`Loaded lyrics cache with ${this.lyricsCache.size} entries`, 'Spotify', LogLevel.DEBUG)
+        log(
+          `Loaded lyrics cache with ${this.lyricsCache.size} entries`,
+          'Spotify',
+          LogLevel.DEBUG
+        )
         this.cleanLyricsCache()
       } else {
-        log(`No lyrics cache found or invalid format`, 'Spotify', LogLevel.DEBUG)
+        log(
+          `No lyrics cache found or invalid format`,
+          'Spotify',
+          LogLevel.DEBUG
+        )
       }
     } catch (error) {
-      log(`Error loading lyrics cache: ${error}`, 'Spotify', LogLevel.ERROR)
+      log(
+        `Error loading lyrics cache: ${error}`,
+        'Spotify',
+        LogLevel.ERROR
+      )
       this.lyricsCache = new Map()
     }
   }
 
-  getLyricsCacheStats(): { size: number, avgAge: number } {
+  getLyricsCacheStats(): { size: number; avgAge: number } {
     const now = Date.now()
     let totalAge = 0
 
@@ -660,8 +684,15 @@ class SpotifyHandler extends BasePlaybackHandler {
     try {
       const cachedLyrics = this.lyricsCache.get(trackId)
 
-      if (cachedLyrics && (now - cachedLyrics.timestamp < this.lyricsCacheExpiration)) {
-        log(`Using cached lyrics for track: ${trackId}`, 'Spotify', LogLevel.DEBUG)
+      if (
+        cachedLyrics &&
+        now - cachedLyrics.timestamp < this.lyricsCacheExpiration
+      ) {
+        log(
+          `Using cached lyrics for track: ${trackId}`,
+          'Spotify',
+          LogLevel.DEBUG
+        )
         return cachedLyrics.data
       }
 
@@ -678,7 +709,7 @@ class SpotifyHandler extends BasePlaybackHandler {
       const fetchLyrics = async (): Promise<any> => {
         return await axios.get(url, {
           headers: {
-            'authorization': `Bearer ${this.webToken}`,
+            authorization: `Bearer ${this.webToken}`,
             'app-platform': 'WebPlayer'
           },
           validateStatus: () => true
@@ -688,13 +719,21 @@ class SpotifyHandler extends BasePlaybackHandler {
       let res = await fetchLyrics()
 
       if (res.status === 401 && this.config?.sp_dc) {
-        log('Received 401 error, refreshing webToken and retrying', 'Spotify', LogLevel.WARN)
+        log(
+          'Received 401 error, refreshing webToken and retrying',
+          'Spotify',
+          LogLevel.WARN
+        )
         try {
           this.webToken = await getWebToken(this.config.sp_dc)
           log('Successfully refreshed webToken', 'Spotify', LogLevel.DEBUG)
           res = await fetchLyrics()
         } catch (refreshError) {
-          log(`Failed to refresh webToken: ${refreshError}`, 'Spotify', LogLevel.ERROR)
+          log(
+            `Failed to refresh webToken: ${refreshError}`,
+            'Spotify',
+            LogLevel.ERROR
+          )
           throw new Error(`Failed to refresh webToken: ${refreshError}`)
         }
       }
@@ -716,7 +755,10 @@ class SpotifyHandler extends BasePlaybackHandler {
     } catch (error) {
       log(`Error fetching lyrics: ${error}`, 'Spotify', LogLevel.ERROR)
       const noLyricsMsg = 'No lyrics for this track'
-      this.lyricsCache.set(trackId, { data: { message: noLyricsMsg }, timestamp: now })
+      this.lyricsCache.set(trackId, {
+        data: { message: noLyricsMsg },
+        timestamp: now
+      })
       this.saveLyricsCache()
       return this.lyricsCache.get(trackId)?.data ?? null
     }

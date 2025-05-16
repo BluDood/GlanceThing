@@ -464,8 +464,8 @@ async function setupTray() {
   const icon =
     os.platform() === 'darwin'
       ? nativeImage
-        .createFromPath(trayIcon)
-        .resize({ height: 24, width: 24 })
+          .createFromPath(trayIcon)
+          .resize({ height: 24, width: 24 })
       : trayIcon
   const tray = new Tray(icon)
 

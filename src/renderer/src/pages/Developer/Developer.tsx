@@ -124,7 +124,11 @@ const Developer: React.FC = () => {
         <button onClick={clearLyricsCache}>
           Clear Spotify Lyrics Cache
         </button>
-        {lyricsCacheCleared && <span className={styles.successMessage}>Lyrics cache cleared successfully, please restart GlanceThing!</span>}
+        {lyricsCacheCleared && (
+          <span className={styles.successMessage}>
+            Lyrics cache cleared successfully, please restart GlanceThing!
+          </span>
+        )}
       </div>
 
       <h2>Links</h2>

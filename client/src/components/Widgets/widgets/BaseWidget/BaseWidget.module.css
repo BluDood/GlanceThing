@@ -14,7 +14,7 @@
   border-color: var(--color-primary);
 }
 
-.widget>div {
+.widget > div {
   display: flex;
   flex: 1;
   outline: none;

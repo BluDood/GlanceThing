@@ -34,7 +34,9 @@ const Spotify: React.FC<SpotifyProps> = ({ onStepComplete }) => {
             setStep(SpotifyStep.Token)
             credentialsRef.current = data
           }}
-          onStepSkip={() => { setStep(SpotifyStep.Token) }}
+          onStepSkip={() => {
+            setStep(SpotifyStep.Token)
+          }}
         />
       ) : step === SpotifyStep.Token ? (
         <TokenSetup
@@ -47,7 +49,9 @@ const Spotify: React.FC<SpotifyProps> = ({ onStepComplete }) => {
               onStepComplete()
             }
           }}
-          onStepSkip={() => { onStepComplete() }}
+          onStepSkip={() => {
+            onStepComplete()
+          }}
         />
       ) : null}
       <div className={styles.hasSetup} data-shown={hasSetup}>
@@ -68,7 +72,7 @@ interface SpotifyAPISetupProps {
     clientId: string
     clientSecret: string
     refreshToken: string
-  }) => void,
+  }) => void
   onStepSkip: () => void
 }
 
@@ -220,7 +224,10 @@ enum TokenSetupState {
   Error
 }
 
-const TokenSetup: React.FC<TokenSetupProps> = ({ onStepComplete, onStepSkip }) => {
+const TokenSetup: React.FC<TokenSetupProps> = ({
+  onStepComplete,
+  onStepSkip
+}) => {
   const [state, setState] = useState<TokenSetupState>(0)
   const [error, setError] = useState<string>('')
   const inputRef = useRef<HTMLInputElement | null>(null)

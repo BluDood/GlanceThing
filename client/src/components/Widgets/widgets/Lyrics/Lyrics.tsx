@@ -1,4 +1,10 @@
-import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  useRef
+} from 'react'
 import { MediaContext } from '@/contexts/MediaContext.tsx'
 import BaseWidget from '../BaseWidget/BaseWidget'
 
@@ -18,27 +24,47 @@ const Lyrics: React.FC<LyricsProps> = ({ visible, sectionActive }) => {
 
   const lyricsContentRef = useRef<HTMLDivElement>(null)
   const activeLineRef = useRef<HTMLDivElement | null>(null)
-  const [originalPrimary, setOriginalPrimary] = useState<string | null>(null)
-  const [originalBgColor, setOriginalBgColor] = useState<string | null>(null)
-  const [originalInactiveColor, setOriginalInactiveColor] = useState<string | null>(null)
-  const [originalTextColor, setOriginalTextColor] = useState<string | null>(null)
+  const [originalPrimary, setOriginalPrimary] = useState<string | null>(
+    null
+  )
+  const [originalBgColor, setOriginalBgColor] = useState<string | null>(
+    null
+  )
+  const [originalInactiveColor, setOriginalInactiveColor] = useState<
+    string | null
+  >(null)
+  const [originalTextColor, setOriginalTextColor] = useState<
+    string | null
+  >(null)
 
   useEffect(() => {
     const computedStyle = getComputedStyle(document.documentElement)
     setOriginalPrimary(computedStyle.getPropertyValue('--color-primary'))
-    setOriginalBgColor(computedStyle.getPropertyValue('--lyrics-color-background'))
-    setOriginalInactiveColor(computedStyle.getPropertyValue('--lyrics-color-inactive'))
-    setOriginalTextColor(computedStyle.getPropertyValue('--lyrics-color-messaging'))
+    setOriginalBgColor(
+      computedStyle.getPropertyValue('--lyrics-color-background')
+    )
+    setOriginalInactiveColor(
+      computedStyle.getPropertyValue('--lyrics-color-inactive')
+    )
+    setOriginalTextColor(
+      computedStyle.getPropertyValue('--lyrics-color-messaging')
+    )
   }, [])
 
   const scrollToActiveLine = useCallback(() => {
-    if (!visible || !sectionActive || !activeLineRef.current || !lyricsContentRef.current) return
+    if (
+      !visible ||
+      !sectionActive ||
+      !activeLineRef.current ||
+      !lyricsContentRef.current
+    )
+      return
     const lyricsContainer = lyricsContentRef.current
     const activeLine = activeLineRef.current
     const containerHeight = lyricsContainer.clientHeight
     const lineTop = activeLine.offsetTop
     const lineHeight = activeLine.clientHeight
-    const scrollTo = lineTop - (containerHeight / 2) + (lineHeight / 2)
+    const scrollTo = lineTop - containerHeight / 2 + lineHeight / 2
     requestAnimationFrame(() => {
       if (lyricsContainer) {
         lyricsContainer.scrollTo({
@@ -63,26 +89,60 @@ const Lyrics: React.FC<LyricsProps> = ({ visible, sectionActive }) => {
         }
       })
     }
-  }, [currentLineIndex, scrollToActiveLine, visible, sectionActive, syncLyric])
+  }, [
+    currentLineIndex,
+    scrollToActiveLine,
+    visible,
+    sectionActive,
+    syncLyric
+  ])
 
-  const setColors = useCallback((bgColor?: string, textColor?: string, inactiveColor?: string) => {
-    document.documentElement.style.setProperty('--color-primary', bgColor ?? originalPrimary)
-    document.documentElement.style.setProperty('--lyrics-color-background', bgColor ?? originalBgColor)
-    document.documentElement.style.setProperty('--lyrics-color-active', textColor ?? originalTextColor)
-    document.documentElement.style.setProperty('--lyrics-color-inactive', inactiveColor ?? originalInactiveColor)
-    document.documentElement.style.setProperty('--lyrics-color-passed', textColor ?? originalTextColor)
-    document.documentElement.style.setProperty('--lyrics-color-messaging', inactiveColor ?? originalTextColor)
-  }, [originalPrimary, originalBgColor, originalInactiveColor, originalTextColor])
+  const setColors = useCallback(
+    (bgColor?: string, textColor?: string, inactiveColor?: string) => {
+      document.documentElement.style.setProperty(
+        '--color-primary',
+        bgColor ?? originalPrimary
+      )
+      document.documentElement.style.setProperty(
+        '--lyrics-color-background',
+        bgColor ?? originalBgColor
+      )
+      document.documentElement.style.setProperty(
+        '--lyrics-color-active',
+        textColor ?? originalTextColor
+      )
+      document.documentElement.style.setProperty(
+        '--lyrics-color-inactive',
+        inactiveColor ?? originalInactiveColor
+      )
+      document.documentElement.style.setProperty(
+        '--lyrics-color-passed',
+        textColor ?? originalTextColor
+      )
+      document.documentElement.style.setProperty(
+        '--lyrics-color-messaging',
+        inactiveColor ?? originalTextColor
+      )
+    },
+    [
+      originalPrimary,
+      originalBgColor,
+      originalInactiveColor,
+      originalTextColor
+    ]
+  )
 
   useEffect(() => {
     setSyncLyric(false)
     if (lyricsData) {
-      if (lyricsData?.lyrics?.syncType === "LINE_SYNCED") {
+      if (lyricsData?.lyrics?.syncType === 'LINE_SYNCED') {
         setSyncLyric(true)
       }
       setLoading(false)
       setError(null)
-      setHasLyrics(!!lyricsData?.lyrics?.lines && lyricsData.lyrics.lines.length > 0)
+      setHasLyrics(
+        !!lyricsData?.lyrics?.lines && lyricsData.lyrics.lines.length > 0
+      )
 
       if (lyricsData.colors?.background !== undefined) {
         try {
@@ -92,11 +152,13 @@ const Lyrics: React.FC<LyricsProps> = ({ visible, sectionActive }) => {
           const b = background.b ?? 0
           const bgColor = `rgb(${r}, ${g}, ${b})`
           const brightness = (r * 299 + g * 587 + b * 114) / 1000
-          const textColor = brightness > 128 ? "rgb(0, 0, 0)" : "rgb(255, 255, 255)"
+          const textColor =
+            brightness > 128 ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)'
 
-          const inactiveColor = brightness > 128 ?
-            `rgb(255, 255, 255)` :
-            `rgb(${Math.min(255, background.r + 140)}, ${Math.min(255, background.g + 140)}, ${Math.min(255, background.b + 140)})`
+          const inactiveColor =
+            brightness > 128
+              ? `rgb(255, 255, 255)`
+              : `rgb(${Math.min(255, background.r + 140)}, ${Math.min(255, background.g + 140)}, ${Math.min(255, background.b + 140)})`
           setColors(bgColor, textColor, inactiveColor)
         } catch (err) {
           console.error('Error setting background color:', err)
@@ -111,13 +173,21 @@ const Lyrics: React.FC<LyricsProps> = ({ visible, sectionActive }) => {
   }, [lyricsData, setColors])
 
   const renderLyrics = () => {
-    if (!visible || !sectionActive || !hasLyrics || !lyricsData?.lyrics?.lines) {
+    if (
+      !visible ||
+      !sectionActive ||
+      !hasLyrics ||
+      !lyricsData?.lyrics?.lines
+    ) {
       return <div className={styles.emptyLyrics}></div>
     }
 
     return (
       <div className={styles.lyricsContent} ref={lyricsContentRef}>
-        <div className={styles.lyricsTopPadding} style={{ display: syncLyric ? 'block' : 'none' }}></div>
+        <div
+          className={styles.lyricsTopPadding}
+          style={{ display: syncLyric ? 'block' : 'none' }}
+        ></div>
         {lyricsData.lyrics.lines.map((line, index) => (
           <div
             key={index}
@@ -127,7 +197,10 @@ const Lyrics: React.FC<LyricsProps> = ({ visible, sectionActive }) => {
             {line.words}
           </div>
         ))}
-        <div className={styles.lyricsBottomPadding} style={{ display: syncLyric ? 'block' : 'none' }}></div>
+        <div
+          className={styles.lyricsBottomPadding}
+          style={{ display: syncLyric ? 'block' : 'none' }}
+        ></div>
       </div>
     )
   }
@@ -150,9 +223,7 @@ const Lyrics: React.FC<LyricsProps> = ({ visible, sectionActive }) => {
     }
 
     if (hasLyrics) {
-      return (
-        <div className={styles.lyricsContainer}>{renderLyrics()}</div>
-      )
+      return <div className={styles.lyricsContainer}>{renderLyrics()}</div>
     }
 
     return <div className={styles.loading}>Waiting for track...</div>
@@ -160,9 +231,7 @@ const Lyrics: React.FC<LyricsProps> = ({ visible, sectionActive }) => {
 
   return (
     <BaseWidget className={styles.lyricsWidget} visible={visible}>
-      <div className={styles.lyricsWidgetContainer}>
-        {renderContent()}
-      </div>
+      <div className={styles.lyricsWidgetContainer}>{renderContent()}</div>
     </BaseWidget>
   )
 }

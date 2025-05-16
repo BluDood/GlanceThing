@@ -1,11 +1,52 @@
-import { createContext, useState, useEffect, useCallback, useContext, useRef } from 'react'
+import {
+  createContext,
+  useState,
+  useEffect,
+  useCallback,
+  useContext,
+  useRef
+} from 'react'
 import { SocketContext } from './SocketContext'
 
 // Constants for date formatting
 const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const WEEKDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const WEEKDAYS_LONG = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday'
+]
+const MONTHS_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec'
+]
+const MONTHS_LONG = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December'
+]
 
 interface TimeContextValue {
   time: string
@@ -14,14 +55,16 @@ interface TimeContextValue {
 
 const TimeContext = createContext<TimeContextValue>({
   time: '',
-  date: '',
+  date: ''
 })
 
 interface TimeProviderProps {
   children: React.ReactNode
 }
 
-const TimeContextProvider: React.FC<TimeProviderProps> = ({ children }) => {
+const TimeContextProvider: React.FC<TimeProviderProps> = ({
+  children
+}) => {
   const { socket, ready } = useContext(SocketContext)
 
   const [time, setTime] = useState<string>('')
@@ -29,52 +72,64 @@ const TimeContextProvider: React.FC<TimeProviderProps> = ({ children }) => {
 
   const lastServerTime = useRef<Date | null>(null)
   const lastConnectionTime = useRef<number>(performance.now())
-  const localTimeInterval = useRef<ReturnType<typeof setInterval> | null>(null)
+  const localTimeInterval = useRef<ReturnType<typeof setInterval> | null>(
+    null
+  )
 
-  const getWeekdayName = useCallback((day: number, useLongFormat: boolean = false): string => {
-    return useLongFormat ? WEEKDAYS_LONG[day] : WEEKDAYS_SHORT[day]
-  }, [])
+  const getWeekdayName = useCallback(
+    (day: number, useLongFormat: boolean = false): string => {
+      return useLongFormat ? WEEKDAYS_LONG[day] : WEEKDAYS_SHORT[day]
+    },
+    []
+  )
 
-  const getMonthName = useCallback((month: number, useLongFormat: boolean = false): string => {
-    return useLongFormat ? MONTHS_LONG[month] : MONTHS_SHORT[month]
-  }, [])
+  const getMonthName = useCallback(
+    (month: number, useLongFormat: boolean = false): string => {
+      return useLongFormat ? MONTHS_LONG[month] : MONTHS_SHORT[month]
+    },
+    []
+  )
 
   const getLongFormatFlag = useCallback((dateFormat: string): boolean => {
     return dateFormat === 'dddd, D MMMM'
   }, [])
 
-  const formatDateTime = useCallback((date: Date): { time: string, date: string } => {
-    try {
-      const timeFormat = localStorage.getItem('timeFormat') || 'HH:mm'
-      const dateFormat = localStorage.getItem('dateFormat') || 'ddd, D MMM'
-      const useLongNames = getLongFormatFlag(dateFormat)
+  const formatDateTime = useCallback(
+    (date: Date): { time: string; date: string } => {
+      try {
+        const timeFormat = localStorage.getItem('timeFormat') || 'HH:mm'
+        const dateFormat =
+          localStorage.getItem('dateFormat') || 'ddd, D MMM'
+        const useLongNames = getLongFormatFlag(dateFormat)
 
-      let timeString = ''
-      if (timeFormat === 'HH:mm') {
-        const hours = date.getHours().toString().padStart(2, '0')
-        const minutes = date.getMinutes().toString().padStart(2, '0')
-        timeString = `${hours}:${minutes}`
-      } else {
-        const hours = date.getHours()
-        const minutes = date.getMinutes().toString().padStart(2, '0')
-        const period = hours >= 12 ? 'PM' : 'AM'
-        const displayHours = hours % 12 || 12
-        timeString = `${displayHours}:${minutes} ${period}`
+        let timeString = ''
+        if (timeFormat === 'HH:mm') {
+          const hours = date.getHours().toString().padStart(2, '0')
+          const minutes = date.getMinutes().toString().padStart(2, '0')
+          timeString = `${hours}:${minutes}`
+        } else {
+          const hours = date.getHours()
+          const minutes = date.getMinutes().toString().padStart(2, '0')
+          const period = hours >= 12 ? 'PM' : 'AM'
+          const displayHours = hours % 12 || 12
+          timeString = `${displayHours}:${minutes} ${period}`
+        }
+
+        const day = date.getDate()
+        const weekday = date.getDay()
+        const month = date.getMonth()
+        const weekdayName = getWeekdayName(weekday, useLongNames)
+        const monthName = getMonthName(month, useLongNames)
+        const dateString = `${weekdayName}, ${day} ${monthName}`
+
+        return { time: timeString, date: dateString }
+      } catch (e) {
+        console.error('Error formatting date/time:', e)
+        return { time: '', date: '' }
       }
-
-      const day = date.getDate()
-      const weekday = date.getDay()
-      const month = date.getMonth()
-      const weekdayName = getWeekdayName(weekday, useLongNames)
-      const monthName = getMonthName(month, useLongNames)
-      const dateString = `${weekdayName}, ${day} ${monthName}`
-
-      return { time: timeString, date: dateString }
-    } catch (e) {
-      console.error('Error formatting date/time:', e)
-      return { time: '', date: '' }
-    }
-  }, [getWeekdayName, getMonthName, getLongFormatFlag])
+    },
+    [getWeekdayName, getMonthName, getLongFormatFlag]
+  )
 
   const setTimeDate = (time?: string, date?: string) => {
     setTime(time ?? '')
@@ -88,7 +143,9 @@ const TimeContextProvider: React.FC<TimeProviderProps> = ({ children }) => {
     }
     try {
       const msElapsed = performance.now() - lastConnectionTime.current
-      const updatedTime = new Date(lastServerTime.current.getTime() + msElapsed)
+      const updatedTime = new Date(
+        lastServerTime.current.getTime() + msElapsed
+      )
       const formattedDateTime = formatDateTime(updatedTime)
       setTimeDate(formattedDateTime.time, formattedDateTime.date)
     } catch (error) {
@@ -151,7 +208,9 @@ const TimeContextProvider: React.FC<TimeProviderProps> = ({ children }) => {
     date
   }
 
-  return <TimeContext.Provider value={value}>{children}</TimeContext.Provider>
+  return (
+    <TimeContext.Provider value={value}>{children}</TimeContext.Provider>
+  )
 }
 
 export { TimeContext, TimeContextProvider }

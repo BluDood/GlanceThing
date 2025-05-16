@@ -15,7 +15,8 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 
 const Screensaver: React.FC<ScreensaverProps> = ({ type }) => {
   const { ready, socket } = useContext(SocketContext)
-  const { showTimeOnScreensaver, screensaverTimePosition } = useContext(AppSettingsContext)
+  const { showTimeOnScreensaver, screensaverTimePosition } =
+    useContext(AppSettingsContext)
   const { time, date } = useContext(TimeContext)
 
   const [loaded, setLoaded] = useState(false)
@@ -120,7 +121,15 @@ const Screensaver: React.FC<ScreensaverProps> = ({ type }) => {
       socket.removeEventListener('message', listener)
       clearInterval(retryInterval)
     }
-  }, [ready, socket, customImage, requestImage, validateImage, showTimeOnScreensaver, type])
+  }, [
+    ready,
+    socket,
+    customImage,
+    requestImage,
+    validateImage,
+    showTimeOnScreensaver,
+    type
+  ])
 
   useEffect(() => {
     if (type === 'screensaver') {
@@ -135,7 +144,8 @@ const Screensaver: React.FC<ScreensaverProps> = ({ type }) => {
   const renderTimeDisplay = () => {
     if (!showTimeOnScreensaver || type !== 'screensaver') return null
 
-    const positionClass = styles[screensaverTimePosition] || styles['bottom-right']
+    const positionClass =
+      styles[screensaverTimePosition] || styles['bottom-right']
 
     return (
       <div className={`${styles.timeContainer} ${positionClass}`}>

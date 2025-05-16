@@ -249,9 +249,7 @@ export async function rebootCarThing(device: string | null) {
   const adb = await getAdbExecutable()
 
   log('Reboot...', 'adb', LogLevel.DEBUG)
-  await execAsync(
-    `${adb} -s ${device} shell "reboot"`
-  )
+  await execAsync(`${adb} -s ${device} shell "reboot"`)
 }
 
 export async function installApp(device: string | null) {

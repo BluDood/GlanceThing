@@ -67,12 +67,12 @@ const MediaContext = createContext<MediaContextProps>({
   lyricsData: null,
   currentLineIndex: -1,
   actions: {
-    playPause: () => { },
-    skipForward: () => { },
-    skipBackward: () => { },
-    setVolume: () => { },
-    shuffle: () => { },
-    repeat: () => { }
+    playPause: () => {},
+    skipForward: () => {},
+    skipBackward: () => {},
+    setVolume: () => {},
+    shuffle: () => {},
+    repeat: () => {}
   }
 })
 
@@ -92,7 +92,12 @@ const MediaContextProvider = ({ children }: MediaContextProviderProps) => {
   const [currentLineIndex, setCurrentLineIndex] = useState<number>(-1)
 
   useEffect(() => {
-    if (!playerData?.isPlaying || !lyricsData?.lyrics?.lines || lyricsData.lyrics.lines.length === 0) return
+    if (
+      !playerData?.isPlaying ||
+      !lyricsData?.lyrics?.lines ||
+      lyricsData.lyrics.lines.length === 0
+    )
+      return
 
     const currentTime = playerData.track.duration.current
 
@@ -131,7 +136,8 @@ const MediaContextProvider = ({ children }: MediaContextProviderProps) => {
     const newTrack = newData.track
     if (!currentTrack) return true
     if (currentTrack.name !== newTrack.name) return true
-    if (currentTrack.artists.length !== newTrack.artists.length) return true
+    if (currentTrack.artists.length !== newTrack.artists.length)
+      return true
     for (let i = 0; i < currentTrack.artists.length; i++) {
       if (currentTrack.artists[i] !== newTrack.artists[i]) return true
     }
@@ -139,52 +145,61 @@ const MediaContextProvider = ({ children }: MediaContextProviderProps) => {
     return false
   }, [])
 
-  const handleSocketMessage = useCallback((e: MessageEvent) => {
-    try {
-      const { type, action, data } = JSON.parse(e.data)
-      if (type !== 'playback') return
+  const handleSocketMessage = useCallback(
+    (e: MessageEvent) => {
+      try {
+        const { type, action, data } = JSON.parse(e.data)
+        if (type !== 'playback') return
 
-      if (action === 'image') {
-        setImage(`data:image/png;base64,${data}`)
-        return
-      }
-
-      if (action === 'lyrics') {
-        setLyricsData(data)
-        return
-      }
-
-      if (!data) {
-        setPlayerData(null)
-        setLyricsData(null)
-        return
-      }
-
-      const playbackData = data as PlaybackData
-      if (hasTrackChanged(playbackData)) {
-        socket?.send(JSON.stringify({ type: 'playback', action: 'image' }))
-        if (showLyricsWidget) {
-          socket?.send(JSON.stringify({ type: 'playback', action: 'lyrics' }))
+        if (action === 'image') {
+          setImage(`data:image/png;base64,${data}`)
+          return
         }
+
+        if (action === 'lyrics') {
+          setLyricsData(data)
+          return
+        }
+
+        if (!data) {
+          setPlayerData(null)
+          setLyricsData(null)
+          return
+        }
+
+        const playbackData = data as PlaybackData
+        if (hasTrackChanged(playbackData)) {
+          socket?.send(
+            JSON.stringify({ type: 'playback', action: 'image' })
+          )
+          if (showLyricsWidget) {
+            socket?.send(
+              JSON.stringify({ type: 'playback', action: 'lyrics' })
+            )
+          }
+        }
+
+        setPlayerData(prevData => {
+          if (!prevData) return playbackData
+          const hasChanged =
+            hasTrackChanged(playbackData) ||
+            prevData.isPlaying !== playbackData.isPlaying ||
+            prevData.volume !== playbackData.volume ||
+            prevData.shuffle !== playbackData.shuffle ||
+            prevData.repeat !== playbackData.repeat ||
+            prevData.track.duration.current !==
+              playbackData.track.duration.current ||
+            prevData.track.duration.total !==
+              playbackData.track.duration.total
+
+          return hasChanged ? playbackData : prevData
+        })
+      } catch (err) {
+        console.error('Error parsing message:', err)
       }
-
-      setPlayerData(prevData => {
-        if (!prevData) return playbackData
-        const hasChanged =
-          hasTrackChanged(playbackData) ||
-          prevData.isPlaying !== playbackData.isPlaying ||
-          prevData.volume !== playbackData.volume ||
-          prevData.shuffle !== playbackData.shuffle ||
-          prevData.repeat !== playbackData.repeat ||
-          prevData.track.duration.current !== playbackData.track.duration.current ||
-          prevData.track.duration.total !== playbackData.track.duration.total
-
-        return hasChanged ? playbackData : prevData
-      })
-    } catch (err) {
-      console.error('Error parsing message:', err)
-    }
-  }, [hasTrackChanged, showLyricsWidget, socket])
+    },
+    [hasTrackChanged, showLyricsWidget, socket]
+  )
 
   useEffect(() => {
     if (socketRef.current && socketRef.current !== socket) {
@@ -218,7 +233,8 @@ const MediaContextProvider = ({ children }: MediaContextProviderProps) => {
     if (!playerData || !playerData.isPlaying) return
     const interval = setInterval(() => {
       setPlayerData(p => {
-        if (!p || p.track.duration.current >= p.track.duration.total) return p
+        if (!p || p.track.duration.current >= p.track.duration.total)
+          return p
         return {
           ...p,
           track: {
@@ -242,30 +258,39 @@ const MediaContextProvider = ({ children }: MediaContextProviderProps) => {
   }, [playerData])
 
   type CommandData = {
-    volume?: number;
-    state?: boolean | RepeatMode;
-  };
+    volume?: number
+    state?: boolean | RepeatMode
+  }
 
-  const sendSocketCommand = useCallback((type: string, action: string, data?: CommandData) => {
-    const currentSocket = socket || socketRef.current
-    if (!currentSocket || currentSocket.readyState !== WebSocket.OPEN) return false
+  const sendSocketCommand = useCallback(
+    (type: string, action: string, data?: CommandData) => {
+      const currentSocket = socket || socketRef.current
+      if (!currentSocket || currentSocket.readyState !== WebSocket.OPEN)
+        return false
 
-    currentSocket.send(
-      JSON.stringify({
-        type,
-        action,
-        data
-      })
-    )
+      currentSocket.send(
+        JSON.stringify({
+          type,
+          action,
+          data
+        })
+      )
 
-    return true
-  }, [socket])
+      return true
+    },
+    [socket]
+  )
 
   const actions = {
     playPause: () => {
       if (playerDataRef.current === null) return
 
-      if (sendSocketCommand('playback', playerDataRef.current?.isPlaying ? 'pause' : 'play')) {
+      if (
+        sendSocketCommand(
+          'playback',
+          playerDataRef.current?.isPlaying ? 'pause' : 'play'
+        )
+      ) {
         setPlayerData({
           ...playerDataRef.current!,
           isPlaying: !playerDataRef.current?.isPlaying

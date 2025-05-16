@@ -12,5 +12,5 @@ export const actions: HandlerAction[] = [
     handle: async () => {
       await updateWeather()
     }
-  },
+  }
 ]

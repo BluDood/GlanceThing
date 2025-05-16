@@ -235,31 +235,31 @@ const SliderSetting: React.FC<{
   onChange,
   onRelease
 }) => {
-    return (
-      <div className={styles.sliderSetting} data-disabled={disabled}>
-        <div className={styles.text}>
-          <p className={styles.label}>{label}</p>
-          <p className={styles.description}>{description}</p>
-        </div>
-        <input
-          type="range"
-          defaultValue={defaultValue}
-          value={value}
-          min={min}
-          max={max}
-          step={step}
-          onChange={
-            onChange ? e => onChange(Number(e.target.value)) : undefined
-          }
-          onMouseUp={
-            onRelease
-              ? e => onRelease(Number(e.currentTarget.value))
-              : undefined
-          }
-        />
+  return (
+    <div className={styles.sliderSetting} data-disabled={disabled}>
+      <div className={styles.text}>
+        <p className={styles.label}>{label}</p>
+        <p className={styles.description}>{description}</p>
       </div>
-    )
-  }
+      <input
+        type="range"
+        defaultValue={defaultValue}
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        onChange={
+          onChange ? e => onChange(Number(e.target.value)) : undefined
+        }
+        onMouseUp={
+          onRelease
+            ? e => onRelease(Number(e.currentTarget.value))
+            : undefined
+        }
+      />
+    </div>
+  )
+}
 
 const CoordinatesInputSetting: React.FC<{
   label: string
@@ -284,48 +284,46 @@ const CoordinatesInputSetting: React.FC<{
   onSubmit,
   disabled
 }) => {
-    const latInput = useRef<HTMLInputElement>(null)
-    const longInput = useRef<HTMLInputElement>(null)
+  const latInput = useRef<HTMLInputElement>(null)
+  const longInput = useRef<HTMLInputElement>(null)
 
-    return (
-      <div className={styles.coordinatesInput}>
-        <div className={styles.text}>
-          <p className={styles.label}>{label}</p>
-          <p className={styles.description}>{description}</p>
-        </div>
-        <div className={styles.form}>
-          <input
-            type='text'
-            defaultValue={latDefaultValue}
-            value={latValue}
-            disabled={disabled}
-            onChange={
-              onChange ? e => onChange(e.target.value) : undefined
-            }
-            ref={latInput}
-            placeholder='Latitude'
-          />
-          <input
-            type='text'
-            defaultValue={longDefaultValue}
-            value={longValue}
-            disabled={disabled}
-            onChange={
-              onChange ? e => onChange(e.target.value) : undefined
-            }
-            ref={longInput}
-            placeholder='Longitude'
-          />
-          <button
-            disabled={disabled}
-            onClick={() => onSubmit(latInput?.current!.value, longInput?.current!.value)}
-          >
-            {submitLabel || 'Submit'}
-          </button>
-        </div>
+  return (
+    <div className={styles.coordinatesInput}>
+      <div className={styles.text}>
+        <p className={styles.label}>{label}</p>
+        <p className={styles.description}>{description}</p>
       </div>
-    )
-  }
+      <div className={styles.form}>
+        <input
+          type="text"
+          defaultValue={latDefaultValue}
+          value={latValue}
+          disabled={disabled}
+          onChange={onChange ? e => onChange(e.target.value) : undefined}
+          ref={latInput}
+          placeholder="Latitude"
+        />
+        <input
+          type="text"
+          defaultValue={longDefaultValue}
+          value={longValue}
+          disabled={disabled}
+          onChange={onChange ? e => onChange(e.target.value) : undefined}
+          ref={longInput}
+          placeholder="Longitude"
+        />
+        <button
+          disabled={disabled}
+          onClick={() =>
+            onSubmit(latInput?.current!.value, longInput?.current!.value)
+          }
+        >
+          {submitLabel || 'Submit'}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 const GeneralTab: React.FC = () => {
   const navigate = useNavigate()
@@ -418,8 +416,8 @@ const ClientTab: React.FC = () => {
         sleepMethod: ((await window.api.getStorageValue('sleepMethod')) ||
           'sleep') as string,
         showStatusBar:
-          ((await window.api.getStorageValue('showStatusBar')) ??
-            true) === true,
+          ((await window.api.getStorageValue('showStatusBar')) ?? true) ===
+          true,
         showTimeWidget:
           ((await window.api.getStorageValue('showTimeWidget')) ??
             true) === true,
@@ -441,8 +439,9 @@ const ClientTab: React.FC = () => {
         showTimeOnScreensaver:
           ((await window.api.getStorageValue('showTimeOnScreensaver')) ??
             true) === true,
-        screensaverTimePosition:
-          (await window.api.getStorageValue('screensaverTimePosition') || 'bottom-right') as string,
+        screensaverTimePosition: ((await window.api.getStorageValue(
+          'screensaverTimePosition'
+        )) || 'bottom-right') as string,
         autoSwitchToLyrics:
           ((await window.api.getStorageValue('autoSwitchToLyrics')) ??
             false) === true,
@@ -648,7 +647,10 @@ const ClientTab: React.FC = () => {
               <SelectSetting
                 label="Time Position"
                 description="Choose where to display the time on the screensaver"
-                defaultValue={settings.current.screensaverTimePosition || 'bottom-right'}
+                defaultValue={
+                  settings.current.screensaverTimePosition ||
+                  'bottom-right'
+                }
                 options={[
                   { value: 'bottom-right', label: 'Bottom Right' },
                   { value: 'bottom-left', label: 'Bottom Left' },
@@ -659,7 +661,10 @@ const ClientTab: React.FC = () => {
                   { value: 'center', label: 'Center' }
                 ]}
                 onChange={value => {
-                  window.api.setStorageValue('screensaverTimePosition', value as string)
+                  window.api.setStorageValue(
+                    'screensaverTimePosition',
+                    value as string
+                  )
                 }}
               />
             )}
@@ -789,26 +794,34 @@ const Patch: React.FC<{
 }
 
 const WeatherTab: React.FC = () => {
-  const [loaded, setLoaded] = useState(false);
-  const [update, setUpdate] = useState(false);
-  const [updateError, setUpdateError] = useState(false);
-  const [updateMessage, setUpdateMessage] = useState<string>('');
+  const [loaded, setLoaded] = useState(false)
+  const [update, setUpdate] = useState(false)
+  const [updateError, setUpdateError] = useState(false)
+  const [updateMessage, setUpdateMessage] = useState<string>('')
   const settings = useRef<{
     latitude?: number
     longitude?: number
     temperatureUnit?: string
     locationFormat?: string
     showTempUnit?: boolean
-  }>({});
+  }>({})
 
   useEffect(() => {
     async function loadSettings() {
       settings.current = {
-        latitude: ((await window.api.getStorageValue('latitude')) ?? null) as number,
-        longitude: ((await window.api.getStorageValue('longitude')) ?? null) as number,
-        temperatureUnit: ((await window.api.getStorageValue('temperatureUnit')) || 'celsius') as string,
-        locationFormat: ((await window.api.getStorageValue('locationFormat')) || 'locality-city') as string,
-        showTempUnit: ((await window.api.getStorageValue('showTempUnit')) ?? true) as boolean,
+        latitude: ((await window.api.getStorageValue('latitude')) ??
+          null) as number,
+        longitude: ((await window.api.getStorageValue('longitude')) ??
+          null) as number,
+        temperatureUnit: ((await window.api.getStorageValue(
+          'temperatureUnit'
+        )) || 'celsius') as string,
+        locationFormat: ((await window.api.getStorageValue(
+          'locationFormat'
+        )) || 'locality-city') as string,
+        showTempUnit: ((await window.api.getStorageValue(
+          'showTempUnit'
+        )) ?? true) as boolean
       }
       setLoaded(true)
     }
@@ -816,7 +829,10 @@ const WeatherTab: React.FC = () => {
     loadSettings()
   }, [])
 
-  async function handleCoordinatesSubmit(latitude: string, longitude: string) {
+  async function handleCoordinatesSubmit(
+    latitude: string,
+    longitude: string
+  ) {
     setUpdate(true)
     setUpdateError(false)
     setUpdateMessage('')
@@ -831,7 +847,9 @@ const WeatherTab: React.FC = () => {
         setUpdateMessage('Using IP geolocation to determine your location')
       } catch (error) {
         setUpdateError(true)
-        setUpdateMessage(error instanceof Error ? error.message : 'Error updating weather')
+        setUpdateMessage(
+          error instanceof Error ? error.message : 'Error updating weather'
+        )
       } finally {
         setUpdate(false)
       }
@@ -839,9 +857,14 @@ const WeatherTab: React.FC = () => {
     }
 
     // Check if only one field is empty (which is invalid)
-    if ((!latitude.trim() && longitude.trim()) || (latitude.trim() && !longitude.trim())) {
+    if (
+      (!latitude.trim() && longitude.trim()) ||
+      (latitude.trim() && !longitude.trim())
+    ) {
       setUpdateError(true)
-      setUpdateMessage('Please provide both latitude and longitude, or leave both empty for automatic detection')
+      setUpdateMessage(
+        'Please provide both latitude and longitude, or leave both empty for automatic detection'
+      )
       setUpdate(false)
       return
     }
@@ -860,7 +883,9 @@ const WeatherTab: React.FC = () => {
     // Check if values are in valid range
     if (numLat < -90 || numLat > 90 || numLong < -180 || numLong > 180) {
       setUpdateError(true)
-      setUpdateMessage('Coordinates out of valid range: latitude must be between -90 and 90, longitude between -180 and 180')
+      setUpdateMessage(
+        'Coordinates out of valid range: latitude must be between -90 and 90, longitude between -180 and 180'
+      )
       setUpdate(false)
       return
     }
@@ -873,7 +898,9 @@ const WeatherTab: React.FC = () => {
       setUpdateMessage('Location updated successfully')
     } catch (error) {
       setUpdateError(true)
-      setUpdateMessage(error instanceof Error ? error.message : 'Error updating weather')
+      setUpdateMessage(
+        error instanceof Error ? error.message : 'Error updating weather'
+      )
     } finally {
       setUpdate(false)
     }
@@ -900,8 +927,8 @@ const WeatherTab: React.FC = () => {
             { value: 'fahrenheit', label: 'Fahrenheit (°F)' }
           ]}
           onChange={value => {
-            window.api.setStorageValue('temperatureUnit', value as string);
-            window.api.updateWeather();
+            window.api.setStorageValue('temperatureUnit', value as string)
+            window.api.updateWeather()
           }}
         />
         <ToggleSetting
@@ -924,14 +951,14 @@ const WeatherTab: React.FC = () => {
             { value: 'locality-city', label: 'Locality, City' }
           ]}
           onChange={value => {
-            window.api.setStorageValue('locationFormat', value as string);
-            window.api.updateWeather();
+            window.api.setStorageValue('locationFormat', value as string)
+            window.api.updateWeather()
           }}
         />
-        {update &&
-          <Loader />
-        }
-        <div className={updateError ? styles.error : styles.success}>{updateMessage}</div>
+        {update && <Loader />}
+        <div className={updateError ? styles.error : styles.success}>
+          {updateMessage}
+        </div>
       </div>
     )
   )

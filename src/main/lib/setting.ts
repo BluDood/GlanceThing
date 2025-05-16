@@ -1,4 +1,3 @@
-
 import { AuthenticatedWebSocket } from '../types/WebSocketServer.js'
 import { wss } from './server.js'
 import { getStorageValue } from './storage.js'
@@ -17,16 +16,16 @@ export function getClientSettings() {
     'showTempUnit',
     'autoSwitchToLyrics',
     'showTimeInStatusBar',
-    'showWeatherInStatusBar',
-  ];
-  const clientSettings = {};
+    'showWeatherInStatusBar'
+  ]
+  const clientSettings = {}
   clientKeys.forEach(key => {
-    let value = getStorageValue(key);
+    let value = getStorageValue(key)
     if (value === null) {
       value = true
     }
     clientSettings[key] = value
-  });
+  })
   return clientSettings
 }
 

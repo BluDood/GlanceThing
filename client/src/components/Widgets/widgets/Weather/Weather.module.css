@@ -25,7 +25,7 @@
   line-clamp: 2;
 }
 
-.row{
+.row {
   display: flex;
   align-items: center;
 }

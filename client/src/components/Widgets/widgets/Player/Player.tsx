@@ -37,12 +37,16 @@ const Player: React.FC = () => {
   const [shouldScrollArtists, setShouldScrollArtists] = useState(false)
 
   const animationFrameRef = useRef<number | null>(null)
-  const scrollPauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const scrollPauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  )
   const nameScrollPositionRef = useRef(0)
   const artistScrollPositionRef = useRef(0)
   const scrollDirectionRef = useRef(1) // 1 for left-to-right, -1 for right-to-left
   const lastAnimationTimestampRef = useRef(0)
-  const animateScrollRef = useRef<((timestamp: number) => void) | null>(null)
+  const animateScrollRef = useRef<((timestamp: number) => void) | null>(
+    null
+  )
 
   const [volume, setVolume] = useState(0)
   const volumeRef = useRef(volume)
@@ -50,7 +54,9 @@ const Player: React.FC = () => {
   const [volumeAdjusted, setVolumeAdjusted] = useState(false)
 
   const coverClicks = useRef(0)
-  const coverClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const coverClickTimer = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  )
 
   const [coverAction, setCoverAction] = useState<
     'play' | 'pause' | 'forward' | 'back' | null
@@ -75,170 +81,215 @@ const Player: React.FC = () => {
     }
   }, [])
 
-  const pauseAndScheduleRestart = useCallback((delayMs: number = 3000) => {
-    cleanupAnimationResources()
+  const pauseAndScheduleRestart = useCallback(
+    (delayMs: number = 3000) => {
+      cleanupAnimationResources()
 
-    scrollPauseTimerRef.current = setTimeout(() => {
-      if (isMounted.current && !animationFrameRef.current && animateScrollRef.current) {
-        animationFrameRef.current = requestAnimationFrame(animateScrollRef.current)
+      scrollPauseTimerRef.current = setTimeout(() => {
+        if (
+          isMounted.current &&
+          !animationFrameRef.current &&
+          animateScrollRef.current
+        ) {
+          animationFrameRef.current = requestAnimationFrame(
+            animateScrollRef.current
+          )
+        }
+      }, delayMs)
+    },
+    [cleanupAnimationResources]
+  )
+
+  const handleDirectionChange = useCallback(
+    (toLeftToRight: boolean) => {
+      scrollDirectionRef.current = toLeftToRight ? 1 : -1
+
+      if (toLeftToRight) {
+        pauseAndScheduleRestart()
+        return true
       }
-    }, delayMs)
-  }, [cleanupAnimationResources])
 
-  const handleDirectionChange = useCallback((toLeftToRight: boolean) => {
-    scrollDirectionRef.current = toLeftToRight ? 1 : -1
+      return false
+    },
+    [pauseAndScheduleRestart]
+  )
 
-    if (toLeftToRight) {
-      pauseAndScheduleRestart()
-      return true
-    }
+  const updateScrollPosition = useCallback(
+    (
+      position: number,
+      maxScroll: number,
+      speed: number,
+      isLeftToRight: boolean
+    ): {
+      newPosition: number
+      shouldContinue: boolean
+      stopAnimation: boolean
+    } => {
+      let newPosition = position
+      let shouldContinue = false
+      let stopAnimation = false
 
-    return false
-  }, [pauseAndScheduleRestart])
+      if (isLeftToRight) {
+        // Left to right
+        newPosition += speed
+        shouldContinue = true
 
-  const updateScrollPosition = useCallback((
-    position: number,
-    maxScroll: number,
-    speed: number,
-    isLeftToRight: boolean
-  ): { newPosition: number, shouldContinue: boolean, stopAnimation: boolean } => {
-    let newPosition = position
-    let shouldContinue = false
-    let stopAnimation = false
-
-    if (isLeftToRight) { // Left to right
-      newPosition += speed
-      shouldContinue = true
-
-      if (newPosition >= maxScroll) {
-        newPosition = maxScroll
-        stopAnimation = handleDirectionChange(false) // Change to right-to-left
-      }
-    } else { // Right to left
-      newPosition -= speed
-      shouldContinue = true
-
-      if (newPosition <= 0) {
-        newPosition = 0
-        stopAnimation = handleDirectionChange(true) // Change to left-to-right
-      }
-    }
-
-    return { newPosition, shouldContinue, stopAnimation }
-  }, [handleDirectionChange])
-
-  const calculateAdaptiveSpeed = useCallback((contentWidth: number, containerWidth: number): number => {
-    const overflowAmount = contentWidth - containerWidth
-
-    if (overflowAmount < 0) {
-      return 0 // No overflow
-    }
-
-    switch (true) {
-      case overflowAmount < 50:
-        return 0.1 // Very slow for minimal overflow
-      case overflowAmount < 100:
-        return 0.2 // Slow for small overflow
-      case overflowAmount < 200:
-        return 0.3 // Medium for moderate overflow
-      default:
-        return 0.4 // Normal for significant overflow
-    }
-  }, [])
-
-  const checkElementOverflow = useCallback((
-    element: HTMLElement,
-    container: HTMLElement
-  ): { isOverflowing: boolean, overflowAmount: number } => {
-    const containerWidth = container.clientWidth
-    const textWidth = element.scrollWidth
-
-    const overflowThreshold = textWidth > containerWidth + 30 ? 0 : 5
-    const isOverflowing = textWidth > (containerWidth + overflowThreshold)
-
-    return { isOverflowing, overflowAmount: textWidth - containerWidth }
-  }, [])
-
-  const animateScroll = useCallback((timestamp: number) => {
-    if (!isMounted.current) return
-
-    lastAnimationTimestampRef.current = timestamp
-
-    let shouldContinue = false
-    let nameMaxScroll = 0
-    let artistsMaxScroll = 0
-    let nameSpeed = 0.3
-    let artistSpeed = 0.3
-
-    if (nameRef.current && nameContainerRef.current) {
-      const nameWidth = nameRef.current.scrollWidth
-      const containerWidth = nameContainerRef.current.clientWidth
-      nameMaxScroll = Math.max(0, nameWidth - containerWidth)
-      nameSpeed = calculateAdaptiveSpeed(nameWidth, containerWidth)
-    }
-
-    if (artistsRef.current && artistContainerRef.current) {
-      const artistWidth = artistsRef.current.scrollWidth
-      const containerWidth = artistContainerRef.current.clientWidth
-      artistsMaxScroll = Math.max(0, artistWidth - containerWidth)
-      artistSpeed = calculateAdaptiveSpeed(artistWidth, containerWidth)
-    }
-
-    if (nameRef.current && nameContainerRef.current && shouldScrollTrackName && nameMaxScroll > 0) {
-      const nameEl = nameRef.current
-      const isLeftToRight = scrollDirectionRef.current === 1
-
-      const result = updateScrollPosition(
-        nameScrollPositionRef.current,
-        nameMaxScroll,
-        nameSpeed,
-        isLeftToRight
-      )
-
-      nameScrollPositionRef.current = result.newPosition
-      shouldContinue = result.shouldContinue
-
-      nameEl.style.transform = `translateX(-${nameScrollPositionRef.current}px)`
-
-      if (result.stopAnimation) return
-    }
-
-    if (artistsRef.current && artistContainerRef.current && shouldScrollArtists && artistsMaxScroll > 0) {
-      const artistsEl = artistsRef.current
-      if (shouldScrollTrackName && nameMaxScroll > 0) {
-        const nameProgress = nameMaxScroll > 0 ? (nameScrollPositionRef.current / nameMaxScroll) : 0
-        artistScrollPositionRef.current = nameProgress * artistsMaxScroll
+        if (newPosition >= maxScroll) {
+          newPosition = maxScroll
+          stopAnimation = handleDirectionChange(false) // Change to right-to-left
+        }
       } else {
+        // Right to left
+        newPosition -= speed
+        shouldContinue = true
+
+        if (newPosition <= 0) {
+          newPosition = 0
+          stopAnimation = handleDirectionChange(true) // Change to left-to-right
+        }
+      }
+
+      return { newPosition, shouldContinue, stopAnimation }
+    },
+    [handleDirectionChange]
+  )
+
+  const calculateAdaptiveSpeed = useCallback(
+    (contentWidth: number, containerWidth: number): number => {
+      const overflowAmount = contentWidth - containerWidth
+
+      if (overflowAmount < 0) {
+        return 0 // No overflow
+      }
+
+      switch (true) {
+        case overflowAmount < 50:
+          return 0.1 // Very slow for minimal overflow
+        case overflowAmount < 100:
+          return 0.2 // Slow for small overflow
+        case overflowAmount < 200:
+          return 0.3 // Medium for moderate overflow
+        default:
+          return 0.4 // Normal for significant overflow
+      }
+    },
+    []
+  )
+
+  const checkElementOverflow = useCallback(
+    (
+      element: HTMLElement,
+      container: HTMLElement
+    ): { isOverflowing: boolean; overflowAmount: number } => {
+      const containerWidth = container.clientWidth
+      const textWidth = element.scrollWidth
+
+      const overflowThreshold = textWidth > containerWidth + 30 ? 0 : 5
+      const isOverflowing = textWidth > containerWidth + overflowThreshold
+
+      return { isOverflowing, overflowAmount: textWidth - containerWidth }
+    },
+    []
+  )
+
+  const animateScroll = useCallback(
+    (timestamp: number) => {
+      if (!isMounted.current) return
+
+      lastAnimationTimestampRef.current = timestamp
+
+      let shouldContinue = false
+      let nameMaxScroll = 0
+      let artistsMaxScroll = 0
+      let nameSpeed = 0.3
+      let artistSpeed = 0.3
+
+      if (nameRef.current && nameContainerRef.current) {
+        const nameWidth = nameRef.current.scrollWidth
+        const containerWidth = nameContainerRef.current.clientWidth
+        nameMaxScroll = Math.max(0, nameWidth - containerWidth)
+        nameSpeed = calculateAdaptiveSpeed(nameWidth, containerWidth)
+      }
+
+      if (artistsRef.current && artistContainerRef.current) {
+        const artistWidth = artistsRef.current.scrollWidth
+        const containerWidth = artistContainerRef.current.clientWidth
+        artistsMaxScroll = Math.max(0, artistWidth - containerWidth)
+        artistSpeed = calculateAdaptiveSpeed(artistWidth, containerWidth)
+      }
+
+      if (
+        nameRef.current &&
+        nameContainerRef.current &&
+        shouldScrollTrackName &&
+        nameMaxScroll > 0
+      ) {
+        const nameEl = nameRef.current
         const isLeftToRight = scrollDirectionRef.current === 1
+
         const result = updateScrollPosition(
-          artistScrollPositionRef.current,
-          artistsMaxScroll,
-          artistSpeed,
+          nameScrollPositionRef.current,
+          nameMaxScroll,
+          nameSpeed,
           isLeftToRight
         )
-        artistScrollPositionRef.current = result.newPosition
+
+        nameScrollPositionRef.current = result.newPosition
         shouldContinue = result.shouldContinue
+
+        nameEl.style.transform = `translateX(-${nameScrollPositionRef.current}px)`
+
         if (result.stopAnimation) return
       }
 
-      artistScrollPositionRef.current = Math.min(
-        artistsMaxScroll,
-        Math.max(0, artistScrollPositionRef.current)
-      )
-      artistsEl.style.transform = `translateX(-${artistScrollPositionRef.current}px)`
-    }
+      if (
+        artistsRef.current &&
+        artistContainerRef.current &&
+        shouldScrollArtists &&
+        artistsMaxScroll > 0
+      ) {
+        const artistsEl = artistsRef.current
+        if (shouldScrollTrackName && nameMaxScroll > 0) {
+          const nameProgress =
+            nameMaxScroll > 0
+              ? nameScrollPositionRef.current / nameMaxScroll
+              : 0
+          artistScrollPositionRef.current = nameProgress * artistsMaxScroll
+        } else {
+          const isLeftToRight = scrollDirectionRef.current === 1
+          const result = updateScrollPosition(
+            artistScrollPositionRef.current,
+            artistsMaxScroll,
+            artistSpeed,
+            isLeftToRight
+          )
+          artistScrollPositionRef.current = result.newPosition
+          shouldContinue = result.shouldContinue
+          if (result.stopAnimation) return
+        }
 
-    if (shouldContinue && isMounted.current) {
-      animationFrameRef.current = requestAnimationFrame(animateScrollRef.current!)
-    } else {
-      animationFrameRef.current = null
-    }
-  }, [
-    shouldScrollTrackName,
-    shouldScrollArtists,
-    calculateAdaptiveSpeed,
-    updateScrollPosition
-  ])
+        artistScrollPositionRef.current = Math.min(
+          artistsMaxScroll,
+          Math.max(0, artistScrollPositionRef.current)
+        )
+        artistsEl.style.transform = `translateX(-${artistScrollPositionRef.current}px)`
+      }
+
+      if (shouldContinue && isMounted.current) {
+        animationFrameRef.current = requestAnimationFrame(
+          animateScrollRef.current!
+        )
+      } else {
+        animationFrameRef.current = null
+      }
+    },
+    [
+      shouldScrollTrackName,
+      shouldScrollArtists,
+      calculateAdaptiveSpeed,
+      updateScrollPosition
+    ]
+  )
 
   useEffect(() => {
     animateScrollRef.current = animateScroll
@@ -247,14 +298,19 @@ const Player: React.FC = () => {
   useEffect(() => {
     cleanupAnimationResources()
 
-    if ((shouldScrollTrackName && nameRef.current) || (shouldScrollArtists && artistsRef.current)) {
+    if (
+      (shouldScrollTrackName && nameRef.current) ||
+      (shouldScrollArtists && artistsRef.current)
+    ) {
       nameScrollPositionRef.current = 0
       artistScrollPositionRef.current = 0
       scrollDirectionRef.current = 1 // Start left-to-right
       lastAnimationTimestampRef.current = 0
 
-      if (nameRef.current) nameRef.current.style.transform = 'translateX(0)'
-      if (artistsRef.current) artistsRef.current.style.transform = 'translateX(0)'
+      if (nameRef.current)
+        nameRef.current.style.transform = 'translateX(0)'
+      if (artistsRef.current)
+        artistsRef.current.style.transform = 'translateX(0)'
       pauseAndScheduleRestart(100)
     }
     return cleanupAnimationResources
@@ -272,14 +328,20 @@ const Player: React.FC = () => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         cleanupAnimationResources()
-      } else if ((shouldScrollTrackName || shouldScrollArtists) && !animationFrameRef.current) {
+      } else if (
+        (shouldScrollTrackName || shouldScrollArtists) &&
+        !animationFrameRef.current
+      ) {
         lastAnimationTimestampRef.current = 0 // Reset timestamp
         animationFrameRef.current = requestAnimationFrame(animateScroll)
       }
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      document.removeEventListener(
+        'visibilitychange',
+        handleVisibilityChange
+      )
       cleanupAnimationResources()
     }
   }, [
@@ -303,9 +365,15 @@ const Player: React.FC = () => {
         const artistContainer = artistContainerRef.current
 
         if (nameContainer && nameEl) {
-          const { isOverflowing } = checkElementOverflow(nameEl, nameContainer)
+          const { isOverflowing } = checkElementOverflow(
+            nameEl,
+            nameContainer
+          )
 
-          if (isOverflowing !== shouldScrollTrackName && isMounted.current) {
+          if (
+            isOverflowing !== shouldScrollTrackName &&
+            isMounted.current
+          ) {
             setShouldScrollTrackName(isOverflowing)
 
             if (isOverflowing) {
@@ -316,7 +384,10 @@ const Player: React.FC = () => {
         }
 
         if (artistContainer && artistsEl) {
-          const { isOverflowing } = checkElementOverflow(artistsEl, artistContainer)
+          const { isOverflowing } = checkElementOverflow(
+            artistsEl,
+            artistContainer
+          )
 
           if (isOverflowing !== shouldScrollArtists && isMounted.current) {
             setShouldScrollArtists(isOverflowing)
@@ -368,7 +439,7 @@ const Player: React.FC = () => {
       volumeRef.current = newVolume
       lastVolumeChange.current = Date.now()
     }
-  }, [actions, playerDataRef]);
+  }, [actions, playerDataRef])
 
   const volumeDown = useCallback(() => {
     if (playerDataRef.current === null) return
@@ -383,26 +454,32 @@ const Player: React.FC = () => {
       volumeRef.current = newVolume
       lastVolumeChange.current = Date.now()
     }
-  }, [actions, playerDataRef]);
+  }, [actions, playerDataRef])
 
   // Wrap onWheel in useCallback to prevent it from changing on every render
-  const onWheel = useCallback((e: WheelEvent<HTMLDivElement>) => {
-    if (e.deltaX < 0) {
-      volumeDown();
-    } else if (e.deltaX > 0) {
-      volumeUp();
-    }
-  }, [volumeDown, volumeUp]);
+  const onWheel = useCallback(
+    (e: WheelEvent<HTMLDivElement>) => {
+      if (e.deltaX < 0) {
+        volumeDown()
+      } else if (e.deltaX > 0) {
+        volumeUp()
+      }
+    },
+    [volumeDown, volumeUp]
+  )
 
-  const onKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter') {
-      actions.playPause()
-    } else if (e.key === 'ArrowLeft') {
-      onWheel({ deltaX: -1 } as WheelEvent<HTMLDivElement>)
-    } else if (e.key === 'ArrowRight') {
-      onWheel({ deltaX: 1 } as WheelEvent<HTMLDivElement>)
-    }
-  }, [actions, onWheel]);
+  const onKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter') {
+        actions.playPause()
+      } else if (e.key === 'ArrowLeft') {
+        onWheel({ deltaX: -1 } as WheelEvent<HTMLDivElement>)
+      } else if (e.key === 'ArrowRight') {
+        onWheel({ deltaX: 1 } as WheelEvent<HTMLDivElement>)
+      }
+    },
+    [actions, onWheel]
+  )
 
   const handleCoverPress = useCallback(() => {
     coverClicks.current++
@@ -426,7 +503,7 @@ const Player: React.FC = () => {
       coverClicks.current = 0
       coverClickTimer.current = null
     }, 200)
-  }, [actions, playerDataRef]);
+  }, [actions, playerDataRef])
 
   useEffect(() => {
     if (coverAction) {
@@ -463,7 +540,10 @@ const Player: React.FC = () => {
   useEffect(() => {
     if (!playerData) return
 
-    if (playerData.volume && lastVolumeChange.current < Date.now() - 1000) {
+    if (
+      playerData.volume &&
+      lastVolumeChange.current < Date.now() - 1000
+    ) {
       setVolume(playerData.volume)
       volumeRef.current = playerData.volume
     }
@@ -483,7 +563,10 @@ const Player: React.FC = () => {
 
   useEffect(() => {
     const handleWheelEvent = (e: globalThis.WheelEvent) => {
-      if (playerRef.current && playerRef.current.matches(':focus-within')) {
+      if (
+        playerRef.current &&
+        playerRef.current.matches(':focus-within')
+      ) {
         e.preventDefault()
         onWheel({
           deltaX: e.deltaX
@@ -546,12 +629,20 @@ const Player: React.FC = () => {
               )}
             </div>
           </button>
-          <div className={styles.name} id="player-name" ref={nameContainerRef}>
+          <div
+            className={styles.name}
+            id="player-name"
+            ref={nameContainerRef}
+          >
             <span ref={nameRef} style={{ transform: 'translateX(0)' }}>
               {playerData.track.name}
             </span>
           </div>
-          <div className={styles.artists} id="player-artists" ref={artistContainerRef}>
+          <div
+            className={styles.artists}
+            id="player-artists"
+            ref={artistContainerRef}
+          >
             <span ref={artistsRef} style={{ transform: 'translateX(0)' }}>
               {playerData.track.artists.join(', ')}
             </span>
@@ -575,10 +666,11 @@ const Player: React.FC = () => {
               <div
                 className={styles.fill}
                 style={{
-                  width: `${(playerData.track.duration.current /
-                    playerData.track.duration.total) *
+                  width: `${
+                    (playerData.track.duration.current /
+                      playerData.track.duration.total) *
                     100
-                    }%`
+                  }%`
                 }}
               ></div>
             </div>
