@@ -63,6 +63,54 @@
   color: #ff9800;
 }
 
+.update {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  margin: 20px;
+  background: #111;
+  padding: 12px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: appear 500ms ease;
+}
+
+.update .title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+}
+
+.update .title span {
+  color: #0064ff;
+  font-size: 22px;
+}
+
+.update .content {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.update .content .version {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #bbb;
+  font-size: 14px;
+}
+
+.update .content button {
+  padding: 6px 8px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
 @keyframes appear {
   from {
     opacity: 0;

@@ -68,6 +68,7 @@ import {
   removeScreensaverImage,
   hasCustomScreensaverImage
 } from './lib/screensaver.js'
+import { getLatestVersion } from './lib/update.js'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -230,7 +231,8 @@ enum IPCHandler {
   RemoveScreensaverImage = 'removeScreensaverImage',
   HasCustomScreensaverImage = 'hasCustomScreensaverImage',
   OpenDevTools = 'openDevTools',
-  GetChannel = 'getChannel'
+  GetChannel = 'getChannel',
+  CheckUpdate = 'checkUpdate'
 }
 
 async function setupIpcHandlers() {
@@ -475,6 +477,18 @@ async function setupIpcHandlers() {
 
   ipcMain.handle(IPCHandler.GetChannel, () => {
     return isNightly ? 'nightly' : 'stable'
+  })
+
+  ipcMain.handle(IPCHandler.CheckUpdate, async () => {
+    const currentVersion = 'v' + app.getVersion()
+    const latestVersion = await getLatestVersion()
+    if (!latestVersion) return null
+
+    return {
+      currentVersion,
+      latestVersion: latestVersion.version,
+      downloadUrl: latestVersion.downloadUrl
+    }
   })
 }
 

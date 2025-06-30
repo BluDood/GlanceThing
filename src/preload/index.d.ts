@@ -65,6 +65,11 @@ declare global {
       hasCustomScreensaverImage: () => Promise<boolean>
       openDevTools: () => void
       getChannel: () => Promise<'stable' | 'nightly'>
+      checkUpdate: () => Promise<{
+        currentVersion: string
+        latestVersion: string
+        downloadUrl: string
+      } | null>
     }
   }
 }

@@ -42,7 +42,8 @@ enum IPCHandler {
   DownloadLogs = 'downloadLogs',
   UploadScreensaverImage = 'uploadScreensaverImage',
   RemoveScreensaverImage = 'removeScreensaverImage',
-  HasCustomScreensaverImage = 'hasCustomScreensaverImage'
+  HasCustomScreensaverImage = 'hasCustomScreensaverImage',
+  CheckUpdate = 'checkUpdate'
 }
 
 // Custom APIs for renderer
@@ -116,7 +117,8 @@ const api = {
   removeScreensaverImage: () =>
     ipcRenderer.invoke(IPCHandler.RemoveScreensaverImage),
   openDevTools: () => ipcRenderer.invoke('openDevTools'),
-  getChannel: () => ipcRenderer.invoke('getChannel')
+  getChannel: () => ipcRenderer.invoke('getChannel'),
+  checkUpdate: () => ipcRenderer.invoke(IPCHandler.CheckUpdate)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
