@@ -45,5 +45,6 @@ export const setup: SetupFunction = async () => {
 
   return async () => {
     await playbackManager.cleanup()
+    playbackManager.removeAllListeners()
   }
 }
