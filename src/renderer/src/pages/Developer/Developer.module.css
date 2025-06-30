@@ -1,24 +1,117 @@
 .developer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: 200ms ease;
+}
+
+.developer[data-open='true'] {
+  opacity: 1;
+  backdrop-filter: blur(5px);
+  pointer-events: all;
+}
+
+.box {
+  width: 500px;
+  height: 300px;
+  padding: 15px;
+  background: #111;
+  border-radius: 5px;
+  transition: transform 200ms ease;
+  transform: scale(1.05);
+
   display: flex;
   flex-direction: column;
   gap: 10px;
-  align-items: flex-start;
-  margin: 20px;
-  animation: appear 500ms ease;
 }
 
-.buttons {
+.developer[data-open='true'] .box {
+  transform: scale(1);
+}
+
+.header .close {
+  all: unset;
+  cursor: pointer;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.section .status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.section .status .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #444;
+}
+
+.section .status .dot[data-color='green'] {
+  background: #00ff00;
+}
+
+.section .status .dot[data-color='orange'] {
+  background: #ff8800;
+}
+
+.section .status .dot[data-color='red'] {
+  background: #ff0000;
+}
+
+.section .actions {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.section .actions button {
+  padding: 6px 8px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.section .actions button[data-color='red'] {
+  background: #ff0000;
+}
+
+.bottomActions {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 15px;
   display: flex;
   gap: 10px;
 }
 
-@keyframes appear {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.bottomActions button {
+  padding: 6px 8px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }

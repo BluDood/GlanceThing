@@ -10,13 +10,12 @@ interface Shortcut {
 }
 
 const Shortcuts: React.FC = () => {
-  const { shortcutsEditorOpen, setShortcutsEditorOpen } =
-    useContext(ModalContext)
+  const { openModals, setModalOpen } = useContext(ModalContext)
   const uploadImageRef = useRef<HTMLImageElement>(null)
 
   function onClickBackground(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) {
-      setShortcutsEditorOpen(false)
+      setModalOpen('shortcuts', false)
     }
   }
 
@@ -91,7 +90,7 @@ const Shortcuts: React.FC = () => {
   return (
     <div
       className={styles.shortcuts}
-      data-open={shortcutsEditorOpen}
+      data-open={openModals.includes('shortcuts')}
       onClick={onClickBackground}
     >
       {shortcuts ? (

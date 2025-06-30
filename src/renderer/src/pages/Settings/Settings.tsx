@@ -24,20 +24,20 @@ enum Tab {
 }
 
 const Settings: React.FC = () => {
-  const { settingsOpen, setSettingsOpen } = useContext(ModalContext)
+  const { openModals, setModalOpen } = useContext(ModalContext)
   const { devMode } = useContext(DevModeContext)
 
   const [currentTab, setCurrentTab] = useState<Tab>(Tab.General)
 
   function onClickBackground(e: React.MouseEvent<HTMLDivElement>) {
-    if (e.target === e.currentTarget) setSettingsOpen(false)
+    if (e.target === e.currentTarget) setModalOpen('settings', false)
   }
 
   useEffect(() => {
-    if (!settingsOpen && currentTab !== Tab.General) {
+    if (!openModals.includes('settings') && currentTab !== Tab.General) {
       setTimeout(() => setCurrentTab(Tab.General), 200)
     }
-  }, [settingsOpen, currentTab])
+  }, [openModals.includes('settings'), currentTab])
 
   useEffect(() => {
     if (!devMode && currentTab === Tab.Advanced) setCurrentTab(Tab.General)
@@ -46,13 +46,13 @@ const Settings: React.FC = () => {
   return (
     <div
       className={styles.settings}
-      data-open={settingsOpen}
+      data-open={openModals.includes('settings')}
       onClick={onClickBackground}
     >
       <div className={styles.box}>
         <h2>
           Settings
-          <button onClick={() => setSettingsOpen(false)}>
+          <button onClick={() => setModalOpen('settings', false)}>
             <span className="material-icons">close</span>
           </button>
         </h2>

@@ -43,7 +43,8 @@ import {
   getBrightness,
   setBrightnessSmooth,
   getAutoBrightness,
-  setAutoBrightness
+  setAutoBrightness,
+  restore
 } from './lib/adb.js'
 import {
   getShortcuts,
@@ -194,6 +195,7 @@ enum IPCHandler {
   FindCarThing = 'findCarThing',
   FindSetupCarThing = 'findSetupCarThing',
   RebootCarThing = 'rebootCarThing',
+  RestoreCarThing = 'restoreCarThing',
   InstallApp = 'installApp',
   StartServer = 'startServer',
   StopServer = 'stopServer',
@@ -250,6 +252,10 @@ async function setupIpcHandlers() {
 
   ipcMain.handle(IPCHandler.RebootCarThing, async () => {
     await rebootCarThing(null)
+  })
+
+  ipcMain.handle(IPCHandler.RestoreCarThing, async () => {
+    await restore(null)
   })
 
   ipcMain.handle(IPCHandler.InstallApp, async () => {

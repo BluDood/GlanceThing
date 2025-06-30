@@ -17,6 +17,7 @@ declare global {
         'not_found' | 'not_installed' | 'ready'
       >
       rebootCarThing: () => Promise<void>
+      restoreCarThing: () => Promise<void>
       installApp: () => Promise<string | true>
       startServer: () => Promise<void>
       stopServer: () => Promise<void>

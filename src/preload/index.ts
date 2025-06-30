@@ -9,6 +9,7 @@ enum IPCHandler {
   FindCarThing = 'findCarThing',
   FindSetupCarThing = 'findSetupCarThing',
   RebootCarThing = 'rebootCarThing',
+  RestoreCarThing = 'restoreCarThing',
   InstallApp = 'installApp',
   StartServer = 'startServer',
   StopServer = 'stopServer',
@@ -56,6 +57,7 @@ const api = {
   findSetupCarThing: () =>
     ipcRenderer.invoke(IPCHandler.FindSetupCarThing),
   rebootCarThing: () => ipcRenderer.invoke(IPCHandler.RebootCarThing),
+  restoreCarThing: () => ipcRenderer.invoke(IPCHandler.RestoreCarThing),
   installApp: () => ipcRenderer.invoke(IPCHandler.InstallApp),
   startServer: () => ipcRenderer.invoke(IPCHandler.StartServer),
   stopServer: () => ipcRenderer.invoke(IPCHandler.StopServer),
