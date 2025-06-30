@@ -115,7 +115,7 @@ export async function updateApps() {
   if (!wss) return
 
   wss.clients.forEach(async (ws: AuthenticatedWebSocket) => {
-    if (!ws.authenticated) return
+    if (!ws.authenticated && ws.readyState !== WebSocket.OPEN) return
 
     ws.send(
       JSON.stringify({

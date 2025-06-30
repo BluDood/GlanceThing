@@ -12,11 +12,9 @@ export const setup: SetupFunction = async () => {
   playbackManager.on('playback', data => {
     if (!wss) return
     wss.clients.forEach(async (ws: AuthenticatedWebSocket) => {
-      if (!ws.authenticated) return
+      if (!ws.authenticated && ws.readyState !== WebSocket.OPEN) return
 
-      if (ws.readyState === 1) {
-        ws.send(JSON.stringify({ type: 'playback', data }))
-      }
+      ws.send(JSON.stringify({ type: 'playback', data }))
     })
   })
 

@@ -13,16 +13,14 @@ export const setup: SetupFunction = async () => {
     if (!wss) return
 
     wss.clients.forEach(async (ws: AuthenticatedWebSocket) => {
-      if (!ws.authenticated) return
+      if (!ws.authenticated && ws.readyState !== WebSocket.OPEN) return
 
-      if (ws.readyState === 1) {
-        ws.send(
-          JSON.stringify({
-            type: 'time',
-            data: formatDate()
-          })
-        )
-      }
+      ws.send(
+        JSON.stringify({
+          type: 'time',
+          data: formatDate()
+        })
+      )
     })
   }
 

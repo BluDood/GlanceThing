@@ -363,7 +363,8 @@ class SpotifyHandler extends BasePlaybackHandler {
     this.ws.on('open', () => {
       ping()
       const interval = setInterval(() => {
-        if (!this.ws) return clearInterval(interval)
+        if (!this.ws || this.ws!.readyState !== WebSocket.OPEN)
+          return clearInterval(interval)
         ping()
       }, 15000)
     })

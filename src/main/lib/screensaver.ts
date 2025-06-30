@@ -71,7 +71,7 @@ export function removeScreensaverImage() {
 
   if (wss) {
     wss.clients.forEach(async (ws: AuthenticatedWebSocket) => {
-      if (!ws.authenticated) return
+      if (!ws.authenticated && ws.readyState !== WebSocket.OPEN) return
 
       ws.send(
         JSON.stringify({
@@ -103,7 +103,7 @@ export function updateScreensaverImage() {
   if (!wss) return
 
   wss.clients.forEach(async (ws: AuthenticatedWebSocket) => {
-    if (!ws.authenticated) return
+    if (!ws.authenticated && ws.readyState !== WebSocket.OPEN) return
 
     ws.send(
       JSON.stringify({
