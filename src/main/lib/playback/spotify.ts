@@ -28,7 +28,7 @@ async function generateTotp(): Promise<{
   version: string
 } | null> {
   const res = await axios.get(
-    'https://gist.github.com/BluDood/1c82e1086a21adfad5e121f255774d57/raw'
+    `https://gist.github.com/BluDood/1c82e1086a21adfad5e121f255774d57/raw?${Date.now()}}`
   )
   if (res.status !== 200) return null
 
