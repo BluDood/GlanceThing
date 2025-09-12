@@ -116,6 +116,20 @@ export async function findOpenPort() {
   })
 }
 
+export async function isPortOpen(port: number) {
+  return new Promise<boolean>(resolve => {
+    const server = net.createServer()
+
+    server.once('error', () => resolve(false))
+
+    server.once('listening', () => {
+      server.close(() => resolve(true))
+    })
+
+    server.listen(port)
+  })
+}
+
 export function getParsedPlatformCommand(command: string) {
   const platform = process.platform
 

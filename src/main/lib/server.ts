@@ -3,6 +3,7 @@ import { WebSocketServer } from 'ws'
 import {
   findOpenPort,
   isDev,
+  isPortOpen,
   log,
   LogLevel,
   safeParse
@@ -20,7 +21,19 @@ let port: number | null = null
 export async function getServerPort() {
   if (port) return port
 
-  port = isDev() ? 1337 : await findOpenPort()
+  if (isDev()) {
+    if (await isPortOpen(1337)) {
+      port = 1337
+      return port
+    } else {
+      log(
+        'Port 1337 is already in use. Using a random available port instead.',
+        'WebSocketServer'
+      )
+    }
+  }
+
+  port = await findOpenPort()
 
   return port
 }
