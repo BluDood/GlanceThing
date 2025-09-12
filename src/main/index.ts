@@ -262,7 +262,8 @@ async function setupIpcHandlers() {
 
   ipcMain.handle(IPCHandler.InstallApp, async () => {
     const res = await installApp(null).catch(err => ({ err }))
-    if (res?.err) return res.err.message
+    if (res && typeof res === 'object' && 'err' in res)
+      return res.err.message
     return true
   })
 
