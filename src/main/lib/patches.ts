@@ -16,6 +16,7 @@ const patchesFolder = path.join(
     ? app.getAppPath()
     : `${path.join(process.resourcesPath, 'app.asar.unpacked')}`,
   'resources',
+  "common",
   'patches'
 )
 
