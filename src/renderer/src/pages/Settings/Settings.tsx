@@ -313,7 +313,9 @@ const ClientTab: React.FC = () => {
   const [autoBrightness, setAutoBrightness] = useState(false)
   const [sleepMethod, setSleepMethod] = useState('sleep')
   const [patches, setPatches] = useState<
-    { name: string; description: string; installed: boolean }[] | null
+    | { name: string; description: string; installed: boolean }[]
+    | false
+    | null
   >(null)
   const [isDev, setIsDev] = useState(false)
 
@@ -358,6 +360,18 @@ const ClientTab: React.FC = () => {
     await window.api.applyPatch(patchName)
     loadPatches()
   }
+
+  useEffect(() => {
+    const removeListener = window.api.on('carThingState', async s => {
+      if (patches && s !== 'ready') {
+        setPatches(false)
+      } else if (!patches && s === 'ready') {
+        loadPatches()
+      }
+    })
+
+    return () => removeListener()
+  })
 
   return (
     loaded && (
@@ -502,16 +516,24 @@ const ClientTab: React.FC = () => {
             )}
           </div>
         )}
-        {patches && isDev ? (
+        {patches !== null && isDev ? (
           <div className={styles.patches}>
             <h2>Patches</h2>
-            {patches.map(patch => (
-              <Patch
-                key={patch.name}
-                {...patch}
-                onApply={() => applyPatch(patch.name)}
-              />
-            ))}
+
+            {patches ? (
+              patches.map(patch => (
+                <Patch
+                  key={patch.name}
+                  {...patch}
+                  onApply={() => applyPatch(patch.name)}
+                />
+              ))
+            ) : (
+              <div className={styles.status}>
+                <span className="material-icons">info_outline</span>
+                Please connect your CarThing to see and install patches!
+              </div>
+            )}
           </div>
         ) : null}
       </div>

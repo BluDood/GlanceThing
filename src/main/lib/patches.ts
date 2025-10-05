@@ -16,7 +16,7 @@ const patchesFolder = path.join(
     ? app.getAppPath()
     : `${path.join(process.resourcesPath, 'app.asar.unpacked')}`,
   'resources',
-  "common",
+  'common',
   'patches'
 )
 
@@ -87,6 +87,9 @@ export async function applyPatch(patchName: string) {
 }
 
 export async function getPatches() {
+  const device = await findCarThing()
+  if (!device) return false
+
   return await Promise.all(
     patches.map(async p => ({
       name: p.name,

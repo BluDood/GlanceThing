@@ -416,3 +416,17 @@
   border-left: 3px solid #ff4040;
   color: #ff6b6b;
 }
+
+.patches .status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: rgb(0, 100, 255, 0.1);
+  border-left: 3px solid #0096ff;
+  border-radius: 4px;
+  color: #0096ff;
+  font-size: 14px;
+  animation: appear 500ms ease;
+  margin-bottom: 10px;
+}
