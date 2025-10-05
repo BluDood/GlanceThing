@@ -1,5 +1,10 @@
+import { app } from 'electron'
+
+// https://github.com/electron/electron/issues/46538
+if (process.platform === 'linux')
+  app.commandLine.appendSwitch('gtk-version', '3')
+
 import {
-  app,
   shell,
   BrowserWindow,
   ipcMain,
