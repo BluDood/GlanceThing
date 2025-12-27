@@ -10,7 +10,7 @@ import { getStorageValue } from './storage.js'
 export const isDev = () => getStorageValue('devMode') === true
 
 export const random = (len: number) =>
-  crypto.randomBytes(len).toString('hex')
+  crypto.randomBytes(len / 2).toString('hex')
 
 export async function execAsync(cmd: string): Promise<string> {
   return new Promise((resolve, reject) => {
