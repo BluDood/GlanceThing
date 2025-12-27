@@ -1,26 +1,39 @@
+import WebSocket, { ClientOptions } from 'ws'
 import axios, { AxiosInstance } from 'axios'
 import { TOTP } from 'totp-generator'
-import { WebSocket } from 'ws'
 
+import { log, random, safeParse } from '../utils.js'
 import { BasePlaybackHandler } from './BasePlaybackHandler.js'
-import { log } from '../utils.js'
 
 import { Action, PlaybackData, RepeatMode } from '../../types/Playback.js'
 
-async function subscribe(connection_id: string, token: string) {
-  return await axios.put(
-    'https://api.spotify.com/v1/me/notifications/player',
-    null,
-    {
-      params: {
-        connection_id
-      },
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-      validateStatus: () => true
-    }
-  )
+const USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36'
+const SEC_UA =
+  '"Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"'
+const CLIENT_VERSION = '1.2.81.13.gc3aea6b0'
+const HARMONY_CLIENT_VERSION = '4.62.1-5dc29b8a7'
+
+const BROWSER_HEADERS = {
+  accept: 'application/json',
+  'accept-language': 'en-US,en;q=0.9',
+  'content-type': 'application/json',
+  origin: 'https://open.spotify.com',
+  priority: 'u=1, i',
+  referer: 'https://open.spotify.com/',
+  'sec-ch-ua': SEC_UA,
+  'sec-ch-ua-mobile': '?0',
+  'sec-ch-ua-platform': '"Windows"',
+  'sec-fetch-dest': 'empty',
+  'sec-fetch-mode': 'cors',
+  'sec-fetch-site': 'same-site',
+  'user-agent': USER_AGENT
+}
+
+const SOCKET_HEADERS = {
+  'accept-language': 'en-US,en;q=0.9',
+  origin: 'https://open.spotify.com',
+  'user-agent': USER_AGENT
 }
 
 async function generateTotp(): Promise<{
@@ -46,9 +59,8 @@ export async function getWebToken(sp_dc: string) {
 
   const res = await axios.get('https://open.spotify.com/api/token', {
     headers: {
-      cookie: `sp_dc=${sp_dc};`,
-      'user-agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+      ...BROWSER_HEADERS,
+      cookie: `sp_dc=${sp_dc};`
     },
     params: {
       reason: 'init',
@@ -64,7 +76,42 @@ export async function getWebToken(sp_dc: string) {
 
   if (!res.data.accessToken) throw new Error('Invalid sp_dc')
 
-  return res.data.accessToken
+  return {
+    accessToken: res.data.accessToken,
+    clientId: res.data.clientId
+  }
+}
+
+async function getClientToken(clientId: string) {
+  const res = await axios.post(
+    'https://clienttoken.spotify.com/v1/clienttoken',
+    {
+      client_data: {
+        client_version: CLIENT_VERSION,
+        client_id: clientId,
+        js_sdk_data: {
+          device_brand: 'unknown',
+          device_model: 'unknown',
+          os: 'windows',
+          os_version: 'NT 10.0',
+          device_id: crypto.randomUUID(),
+          device_type: 'computer'
+        }
+      }
+    },
+    {
+      headers: {
+        ...BROWSER_HEADERS
+      },
+      validateStatus: () => true
+    }
+  )
+
+  if (res.status !== 200) {
+    throw new Error('Failed to get Spotify client token')
+  }
+
+  return res.data.granted_token.token
 }
 
 export async function refreshAccessToken(
@@ -265,10 +312,15 @@ class SpotifyHandler extends BasePlaybackHandler {
   name: string = 'spotify'
 
   config: SpotifyConfig | null = null
+
   accessToken: string | null = null
   webToken: string | null = null
+  clientToken: string | null = null
+  retriedLogin = false
+
   ws: WebSocket | null = null
   instance: AxiosInstance | null = null
+  webInstance: AxiosInstance | null = null
 
   async setup(config: SpotifyConfig): Promise<void> {
     log('Setting up', 'Spotify')
@@ -281,7 +333,10 @@ class SpotifyHandler extends BasePlaybackHandler {
     })
 
     this.instance.interceptors.request.use(config => {
-      config.headers.Authorization = `Bearer ${this.accessToken}`
+      if (this.accessToken) {
+        config.headers.Authorization = `Bearer ${this.accessToken}`
+      }
+
       return config
     })
 
@@ -304,22 +359,57 @@ class SpotifyHandler extends BasePlaybackHandler {
       return res
     })
 
-    this.webToken = await getWebToken(this.config!.sp_dc).catch(err => {
-      this.emit('error', err)
-      return null
+    this.webInstance = axios.create({
+      headers: {
+        ...BROWSER_HEADERS
+      },
+      validateStatus: () => true
     })
 
-    this.accessToken = await refreshAccessToken(
-      this.config!.clientId,
-      this.config!.clientSecret,
-      this.config!.refreshToken
-    ).catch(err => {
-      this.emit('error', err)
-      return null
+    this.webInstance.interceptors.request.use(config => {
+      if (this.webToken && this.clientToken) {
+        config.headers.Authorization = `Bearer ${this.webToken}`
+        config.headers['client-token'] = this.clientToken
+      }
+
+      return config
     })
+
+    this.webInstance.interceptors.response.use(async response => {
+      if (response.status === 401) {
+        if (this.retriedLogin) {
+          log('Spotify re-authentication failed', 'Spotify')
+          this.retriedLogin = false
+          return response
+        }
+
+        log('Spotify token expired, re-authenticating...', 'Spotify')
+        await this.loginWeb()
+        this.retriedLogin = true
+        const request = response.config
+        return this.webInstance!.request(request)
+      } else if (response.status >= 400 && response.status < 600) {
+        log(
+          `Spotify API returned status ${response.status} for ${response.config.url}`,
+          'Spotify'
+        )
+      }
+
+      this.retriedLogin = false
+
+      return response
+    })
+
+    await this.loginWeb()
+    await this.login()
 
     this.ws = new WebSocket(
-      `wss://dealer.spotify.com/?access_token=${this.webToken}`
+      `wss://dealer.spotify.com/?access_token=${this.webToken}`,
+      {
+        headers: {
+          ...SOCKET_HEADERS
+        }
+      } as ClientOptions
     )
 
     await this.start()
@@ -339,41 +429,173 @@ class SpotifyHandler extends BasePlaybackHandler {
     })
 
     this.ws.on('message', async d => {
-      const msg = JSON.parse(d.toString())
+      const msg = safeParse(d.toString())
+      if (!msg) return
+
       if (msg.headers?.['Spotify-Connection-Id']) {
-        await subscribe(
-          msg.headers['Spotify-Connection-Id'],
-          this.webToken!
-        )
+        await this.subscribe(msg.headers['Spotify-Connection-Id'])
           .then(() => this.emit('open', this.name))
           .catch(err => this.emit('error', err))
-
         return
       }
-      const event = msg.payloads?.[0]?.events?.[0]
+
+      const event = msg.payloads?.[0]
       if (!event) return
 
-      if (event.type === 'PLAYER_STATE_CHANGED') {
-        const state = event.event.state
-
-        if (state.currently_playing_type === 'track') {
-          this.emit('playback', filterData(state))
-        } else if (state.currently_playing_type === 'episode') {
-          const current = await this.getCurrent()
-          if (!current) return
-
-          this.emit('playback', filterData(current))
+      if (
+        ['DEVICE_STATE_CHANGED', 'DEVICE_VOLUME_CHANGED'].includes(
+          event.update_reason
+        )
+      ) {
+        if (!event.cluster.active_device_id) {
+          this.emit('playback', null)
+        } else {
+          this.emit('playback', await this.getPlayback())
         }
-      } else if (event.type === 'DEVICE_STATE_CHANGED') {
-        const devices = event.event.devices
-        if (devices.some(d => d.is_active)) return
-        this.emit('playback', null)
+      } else if (event.update_reason === 'DEVICES_DISAPPEARED') {
+        if (!event.cluster.active_device_id) this.emit('playback', null)
       }
     })
 
     this.ws.on('close', () => this.emit('close'))
 
     this.ws.on('error', err => this.emit('error', err))
+  }
+
+  async loginWeb() {
+    if (!this.config) return
+
+    const { sp_dc } = this.config
+
+    this.webToken = null
+    this.clientToken = null
+
+    const token = await getWebToken(sp_dc).catch(err => {
+      this.emit('error', err)
+      return null
+    })
+    if (!token) return
+    this.webToken = token.accessToken
+
+    const clientToken = await getClientToken(token.clientId).catch(err => {
+      this.emit('error', err)
+      return null
+    })
+    if (!clientToken) return
+    this.clientToken = clientToken
+  }
+
+  async login() {
+    if (!this.config) return
+
+    const { clientId, clientSecret, refreshToken } = this.config
+
+    this.accessToken = null
+
+    const accessToken = await refreshAccessToken(
+      clientId,
+      clientSecret,
+      refreshToken
+    ).catch(err => {
+      this.emit('error', err)
+      return null
+    })
+    if (!accessToken) return
+    this.accessToken = accessToken
+  }
+
+  async subscribe(connectionId: string) {
+    const deviceId = random(40)
+
+    log(`Creating device with ID ${deviceId}`, 'Spotify')
+
+    const deviceRes = await this.webInstance!.post(
+      'https://gew4-spclient.spotify.com/track-playback/v1/devices',
+      {
+        device: {
+          brand: 'spotify',
+          capabilities: {
+            change_volume: true,
+            enable_play_token: true,
+            supports_file_media_type: true,
+            play_token_lost_behavior: 'pause',
+            disable_connect: true,
+            audio_podcasts: true,
+            video_playback: true,
+            manifest_formats: [
+              'file_ids_mp3',
+              'file_urls_mp3',
+              'manifest_urls_audio_ad',
+              'manifest_ids_video',
+              'file_urls_external',
+              'file_ids_mp4',
+              'file_ids_mp4_dual',
+              'manifest_urls_audio_ad'
+            ],
+            supports_preferred_media_type: true,
+            supports_playback_offsets: true,
+            supports_playback_speed: true
+          },
+          device_id: deviceId,
+          device_type: 'computer',
+          metadata: {},
+          model: 'web_player',
+          name: 'Web Player (Chrome)',
+          platform_identifier:
+            'web_player windows 10;chrome 142.0.0.0;desktop',
+          is_group: false
+        },
+        outro_endcontent_snooping: false,
+        connection_id: connectionId,
+        client_version: `harmony:${HARMONY_CLIENT_VERSION}`,
+        volume: 65535
+      },
+      {
+        headers: {
+          ...BROWSER_HEADERS
+        }
+      }
+    )
+
+    if (deviceRes.status !== 200) {
+      log(`Failed to create device: ${deviceRes.status}`, 'Spotify')
+      return
+    }
+
+    log(
+      `Updating connection state of device hobs_${deviceId.slice(0, 34)}`,
+      'Spotify'
+    )
+
+    const connectRes = await this.webInstance!.put(
+      `https://gew4-spclient.spotify.com/connect-state/v1/devices/hobs_${deviceId.slice(
+        0,
+        34
+      )}`,
+      {
+        member_type: 'CONNECT_STATE',
+        device: {
+          device_info: {
+            capabilities: {
+              can_be_player: false,
+              hidden: true,
+              needs_full_player_state: false
+            }
+          }
+        }
+      },
+      {
+        headers: {
+          ...BROWSER_HEADERS,
+          'X-Spotify-Connection-Id': connectionId
+        }
+      }
+    )
+
+    if (connectRes.status !== 200) {
+      log(`Failed to update device: ${connectRes.status}`, 'Spotify')
+      return
+    }
   }
 
   async cleanup(): Promise<void> {
