@@ -45,7 +45,7 @@ async function generateTotp(): Promise<{
   )
   if (res.status !== 200) return null
 
-  const totp = TOTP.generate(res.data.secret)
+  const totp = await TOTP.generate(res.data.secret)
 
   return {
     otp: totp.otp,
