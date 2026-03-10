@@ -1,7 +1,7 @@
 import { createContext, useEffect, useState } from 'react'
 
 interface ChannelContextType {
-  channel: "stable" | "nightly" | null
+  channel: 'stable' | 'nightly' | null
 }
 
 const ChannelContext = createContext<ChannelContextType>({
@@ -15,7 +15,7 @@ interface ChannelContextProviderProps {
 const ChannelContextProvider = ({
   children
 }: ChannelContextProviderProps) => {
-  const [channel, setChannel] = useState<"stable" | "nightly" | null>(null)
+  const [channel, setChannel] = useState<'stable' | 'nightly' | null>(null)
 
   useEffect(() => {
     window.api.getChannel().then(setChannel)
@@ -24,7 +24,7 @@ const ChannelContextProvider = ({
   return (
     <ChannelContext.Provider
       value={{
-        channel,
+        channel
       }}
     >
       {children}
