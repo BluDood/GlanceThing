@@ -9,6 +9,8 @@ import {
 
 export abstract class BasePlaybackHandler extends (EventEmitter as new () => TypedEmitter<PlaybackHandlerEvents>) {
   abstract name: string
+  abstract requiresInternet: boolean
+
   abstract setup(config: unknown): Promise<void>
   abstract cleanup(): Promise<void>
   abstract validateConfig(config: unknown): Promise<boolean>

@@ -1,12 +1,14 @@
 import { playbackManager } from '../playback/playback.js'
+import { checkInternet, log } from '../utils.js'
 import { getStorageValue } from '../storage.js'
 import { wss } from '../server.js'
-import { log } from '../utils.js'
 
 import { AuthenticatedWebSocket } from '../../types/WebSocketServer.js'
 import { SetupFunction } from '../../types/WebSocketSetup.js'
 
 export const name = 'playback'
+
+let retryTimeout: NodeJS.Timeout | null = null
 
 export const setup: SetupFunction = async () => {
   playbackManager.on('playback', data => {
@@ -19,12 +21,45 @@ export const setup: SetupFunction = async () => {
   })
 
   playbackManager.on('close', async () => {
-    log('Closed, attempting to reopen in 5 seconds...', 'PlaybackManager')
     await playbackManager.cleanup()
+    if (retryTimeout) return
 
-    setTimeout(async () => {
-      await playbackManager.setup(playbackHandler)
-    }, 5000)
+    if (
+      playbackManager.requiresInternet(getStorageValue('playbackHandler'))
+    ) {
+      const hasInternet = await checkInternet()
+      if (retryTimeout) return
+      if (!hasInternet) {
+        log(
+          'Closed, will retry when connection is restored...',
+          'PlaybackManager'
+        )
+
+        retryTimeout = setInterval(async () => {
+          const hasInternet = await checkInternet()
+          if (hasInternet) {
+            if (retryTimeout) {
+              clearInterval(retryTimeout)
+              retryTimeout = null
+            }
+            await playbackManager.setup(getStorageValue('playbackHandler'))
+          }
+        }, 5000)
+      }
+    } else {
+      log(
+        'Closed, attempting to reopen in 5 seconds...',
+        'PlaybackManager'
+      )
+
+      retryTimeout = setTimeout(async () => {
+        if (retryTimeout) {
+          clearInterval(retryTimeout)
+          retryTimeout = null
+        }
+        await playbackManager.setup(getStorageValue('playbackHandler'))
+      }, 5000)
+    }
   })
 
   playbackManager.on('open', (handlerName?: string) => {
@@ -44,6 +79,10 @@ export const setup: SetupFunction = async () => {
   }
 
   return async () => {
+    if (retryTimeout) {
+      clearInterval(retryTimeout)
+      retryTimeout = null
+    }
     await playbackManager.cleanup()
     playbackManager.removeAllListeners()
   }

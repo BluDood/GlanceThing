@@ -130,6 +130,28 @@ export async function isPortOpen(port: number) {
   })
 }
 
+export async function checkInternet() {
+  return new Promise<boolean>(resolve => {
+    const socket = net.createConnection(80, 'bludood.com')
+
+    socket.setTimeout(5000)
+
+    socket.on('connect', () => {
+      socket.end()
+      resolve(true)
+    })
+
+    socket.on('timeout', () => {
+      socket.destroy()
+      resolve(false)
+    })
+
+    socket.on('error', () => {
+      resolve(false)
+    })
+  })
+}
+
 export function getParsedPlatformCommand(command: string) {
   const platform = process.platform
 

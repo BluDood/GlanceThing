@@ -310,6 +310,7 @@ interface SpotifyConfig {
 
 class SpotifyHandler extends BasePlaybackHandler {
   name: string = 'spotify'
+  requiresInternet: boolean = true
 
   config: SpotifyConfig | null = null
 

@@ -46,9 +46,23 @@ class PlaybackManager extends (EventEmitter as new () => TypedEmitter<PlaybackHa
     handler.on('close', () => this.emit('close'))
     handler.on('error', error => this.emit('error', error))
 
-    await handler.setup(config)
+    await handler.setup(config).catch(err => {
+      log(
+        `Failed to run handler setup for ${handlerName}: ${err}`,
+        'Playback'
+      )
+    })
 
-    this.emit('playback', await handler.getPlayback())
+    this.emit(
+      'playback',
+      await handler.getPlayback().catch(err => {
+        log(
+          `Failed to get initial playback status for ${handlerName}: ${err}`,
+          'Playback'
+        )
+        return null
+      })
+    )
 
     this.currentHandler = handler
   }
@@ -59,6 +73,11 @@ class PlaybackManager extends (EventEmitter as new () => TypedEmitter<PlaybackHa
   ): Promise<boolean> {
     const handler = this.getHandler(handlerName)
     return handler.validateConfig(config)
+  }
+
+  requiresInternet(handlerName: string): boolean {
+    const handler = this.getHandler(handlerName)
+    return handler.requiresInternet
   }
 
   async cleanup() {
