@@ -78,6 +78,10 @@ GlanceThing will for the most part live in your system tray. Right-click it to b
 
 <img src=".github/assets/tray.png" />
 
+## Contributing
+
+Contributions are very welcome! Make sure to follow the guidelines laid out in [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Support
 
 If you need any help with GlanceThing or the CarThing in general, don't hesitate to ask! You can either submit issues here, join [my discord server](https://discord.bludood.com) or join the [Thing Labs discord server](https://discord.gg/car-thing-hax-community-1042954149786046604).
