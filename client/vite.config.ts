@@ -12,7 +12,8 @@ export default defineConfig({
   plugins: [
     react(),
     legacy({
-      targets: ['Chrome 69']
+      targets: ['Chrome 69'],
+      renderModernChunks: false
     })
   ],
   base: '/usr/share/qt-superbird-app/webapp/',

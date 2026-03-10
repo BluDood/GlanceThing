@@ -104,7 +104,7 @@ function importAddon() {
     if (process.arch === 'x64') {
       try {
         return require('node-nowplaying-win32-x64-msvc')
-      } catch (e) {
+      } catch {
         log('Failed to import native addon', 'Native')
         return null
       }
@@ -112,7 +112,7 @@ function importAddon() {
   } else if (process.platform === 'darwin') {
     try {
       return require('node-nowplaying-darwin-universal')
-    } catch (e) {
+    } catch {
       log('Failed to import native addon', 'Native')
       return null
     }
@@ -120,7 +120,7 @@ function importAddon() {
     if (process.arch === 'x64') {
       try {
         return require('node-nowplaying-linux-x64-gnu')
-      } catch (e) {
+      } catch {
         log('Failed to import native addon', 'Native')
         return null
       }
@@ -180,17 +180,14 @@ export function filterData(data: NowPlayingMessage): PlaybackData | null {
   return playbackData
 }
 
-interface NativeConfig {}
-
 class NativeHandler extends BasePlaybackHandler {
   name: string = 'native'
   requiresInternet: boolean = false
 
-  config: NativeConfig | null = null
   instance: NowPlaying | null = null
   current: NowPlayingMessage | null = null
 
-  async setup(config: NativeConfig): Promise<void> {
+  async setup(): Promise<void> {
     log('Setting up', 'Native')
 
     const addon = importAddon()
@@ -209,7 +206,6 @@ class NativeHandler extends BasePlaybackHandler {
     await instance.subscribe()
 
     this.instance = instance
-    this.config = config
   }
 
   async cleanup(): Promise<void> {
@@ -220,9 +216,7 @@ class NativeHandler extends BasePlaybackHandler {
     this.removeAllListeners()
   }
 
-  async validateConfig(config: unknown): Promise<boolean> {
-    const {} = config as NativeConfig
-
+  async validateConfig(): Promise<boolean> {
     return true
   }
 

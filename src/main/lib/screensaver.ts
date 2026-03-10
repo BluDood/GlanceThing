@@ -29,7 +29,7 @@ export async function uploadScreensaverImage() {
           'Image size exceeds the 5MB limit. Please select a smaller image.'
       }
     }
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: 'file_read_error',
@@ -51,7 +51,7 @@ export async function uploadScreensaverImage() {
     updateScreensaverImage()
 
     return { success: true }
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: 'save_error',

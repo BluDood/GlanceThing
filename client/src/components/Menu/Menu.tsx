@@ -64,6 +64,14 @@ const Menu: React.FC = () => {
     }
   ]
 
+  function onWheel(e: WheelEvent<HTMLDivElement>) {
+    if (e.deltaX < 0) {
+      setSelected(s => (s - 1 + elements.length) % elements.length)
+    } else if (e.deltaX > 0) {
+      setSelected(s => (s + 1) % elements.length)
+    }
+  }
+
   useEffect(() => {
     function listener(e: KeyboardEvent) {
       if (e.key === 'm') {
@@ -98,14 +106,6 @@ const Menu: React.FC = () => {
     setBlurred(shown)
     shownRef.current = shown
   }, [shown, setBlurred])
-
-  function onWheel(e: WheelEvent<HTMLDivElement>) {
-    if (e.deltaX < 0) {
-      setSelected(s => (s - 1 + elements.length) % elements.length)
-    } else if (e.deltaX > 0) {
-      setSelected(s => (s + 1) % elements.length)
-    }
-  }
 
   useEffect(() => {
     const listener = (e: globalThis.WheelEvent) => {
