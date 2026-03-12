@@ -22,12 +22,15 @@ export async function getServerPort() {
   if (port) return port
 
   if (isDev()) {
-    if (await isPortOpen(1337)) {
-      port = 1337
+    const customPort = parseInt(process.env.PORT || '', 10)
+    const targetPort = !isNaN(customPort) ? customPort : 1337
+
+    if (await isPortOpen(targetPort)) {
+      port = targetPort
       return port
     } else {
       log(
-        'Port 1337 is already in use. Using a random available port instead.',
+        `Port ${targetPort} is already in use. Using a random available port instead.`,
         'WebSocketServer'
       )
     }
