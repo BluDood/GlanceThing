@@ -1,7 +1,7 @@
 import { app, dialog } from 'electron'
 import path from 'path'
 import fs from 'fs'
-import { wss } from './server.js'
+import { serverManager } from './server.js'
 import { AuthenticatedWebSocket } from '../types/WebSocketServer.js'
 
 export async function uploadScreensaverImage() {
@@ -69,6 +69,7 @@ export function removeScreensaverImage() {
     fs.unlinkSync(target)
   }
 
+  const wss = serverManager.getServer()
   if (wss) {
     wss.clients.forEach(async (ws: AuthenticatedWebSocket) => {
       if (!ws.authenticated && ws.readyState !== WebSocket.OPEN) return
@@ -100,6 +101,7 @@ export function hasCustomScreensaverImage() {
 }
 
 export function updateScreensaverImage() {
+  const wss = serverManager.getServer()
   if (!wss) return
 
   wss.clients.forEach(async (ws: AuthenticatedWebSocket) => {

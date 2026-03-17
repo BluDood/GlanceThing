@@ -24,8 +24,8 @@ const Connect: React.FC<ConnectProps> = ({ onStepComplete }) => {
   }
 
   useEffect(() => {
-    window.api.isServerStarted().then(started => {
-      if (started) setState(State.Started)
+    window.api.getServerInfo().then(info => {
+      if (info.running) setState(State.Started)
     })
   }, [])
 

@@ -13,7 +13,7 @@ enum IPCHandler {
   InstallApp = 'installApp',
   StartServer = 'startServer',
   StopServer = 'stopServer',
-  IsServerStarted = 'isServerStarted',
+  GetServerInfo = 'getServerInfo',
   ForwardSocketServer = 'forwardSocketServer',
   GetVersion = 'getVersion',
   GetStorageValue = 'getStorageValue',
@@ -43,7 +43,11 @@ enum IPCHandler {
   UploadScreensaverImage = 'uploadScreensaverImage',
   RemoveScreensaverImage = 'removeScreensaverImage',
   HasCustomScreensaverImage = 'hasCustomScreensaverImage',
-  CheckUpdate = 'checkUpdate'
+  OpenDevTools = 'openDevTools',
+  GetChannel = 'getChannel',
+  CheckUpdate = 'checkUpdate',
+  FindOpenPort = 'findOpenPort',
+  IsPortOpen = 'isPortOpen'
 }
 
 // Custom APIs for renderer
@@ -62,7 +66,7 @@ const api = {
   installApp: () => ipcRenderer.invoke(IPCHandler.InstallApp),
   startServer: () => ipcRenderer.invoke(IPCHandler.StartServer),
   stopServer: () => ipcRenderer.invoke(IPCHandler.StopServer),
-  isServerStarted: () => ipcRenderer.invoke(IPCHandler.IsServerStarted),
+  getServerInfo: () => ipcRenderer.invoke(IPCHandler.GetServerInfo),
   forwardSocketServer: () =>
     ipcRenderer.invoke(IPCHandler.ForwardSocketServer),
   getVersion: () => ipcRenderer.invoke(IPCHandler.GetVersion),
@@ -116,9 +120,11 @@ const api = {
     ipcRenderer.invoke(IPCHandler.UploadScreensaverImage),
   removeScreensaverImage: () =>
     ipcRenderer.invoke(IPCHandler.RemoveScreensaverImage),
-  openDevTools: () => ipcRenderer.invoke('openDevTools'),
-  getChannel: () => ipcRenderer.invoke('getChannel'),
-  checkUpdate: () => ipcRenderer.invoke(IPCHandler.CheckUpdate)
+  openDevTools: () => ipcRenderer.invoke(IPCHandler.OpenDevTools),
+  getChannel: () => ipcRenderer.invoke(IPCHandler.GetChannel),
+  checkUpdate: () => ipcRenderer.invoke(IPCHandler.CheckUpdate),
+  findOpenPort: () => ipcRenderer.invoke(IPCHandler.FindOpenPort),
+  isPortOpen: port => ipcRenderer.invoke(IPCHandler.IsPortOpen, port)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

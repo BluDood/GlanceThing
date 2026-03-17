@@ -1,7 +1,7 @@
 import { playbackManager } from '../playback/playback.js'
 import { checkInternet, log } from '../utils.js'
 import { getStorageValue } from '../storage.js'
-import { wss } from '../server.js'
+import { serverManager } from '../server.js'
 
 import { AuthenticatedWebSocket } from '../../types/WebSocketServer.js'
 import { SetupFunction } from '../../types/WebSocketSetup.js'
@@ -12,7 +12,9 @@ let retryTimeout: NodeJS.Timeout | null = null
 
 export const setup: SetupFunction = async () => {
   playbackManager.on('playback', data => {
+    const wss = serverManager.getServer()
     if (!wss) return
+
     wss.clients.forEach(async (ws: AuthenticatedWebSocket) => {
       if (!ws.authenticated && ws.readyState !== WebSocket.OPEN) return
 

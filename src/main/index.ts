@@ -15,6 +15,7 @@ import {
   net,
   nativeImage
 } from 'electron'
+
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { join } from 'path'
 
@@ -25,19 +26,19 @@ import {
   setPlaybackHandlerConfig,
   setStorageValue
 } from './lib/storage.js'
-import { applyPatch, getPatches } from './lib/patches.js'
 import {
   clearLogs,
   downloadLogs,
+  findOpenPort,
   getLogs,
   isDev,
   isNightly,
+  isPortOpen,
   log,
   LogLevel,
   resourceFolder,
   setLogLevel
 } from './lib/utils.js'
-import { startServer, stopServer, isServerStarted } from './lib/server.js'
 import {
   findCarThing,
   rebootCarThing,
@@ -62,7 +63,6 @@ import {
   updateApps
 } from './lib/shortcuts.js'
 
-import { playbackManager } from './lib/playback/playback.js'
 import {
   hasCustomWebApp,
   importCustomWebApp,
@@ -73,7 +73,11 @@ import {
   removeScreensaverImage,
   hasCustomScreensaverImage
 } from './lib/screensaver.js'
+
+import { playbackManager } from './lib/playback/playback.js'
+import { applyPatch, getPatches } from './lib/patches.js'
 import { getLatestVersion } from './lib/update.js'
+import { serverManager } from './lib/server.js'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -168,10 +172,15 @@ app.on('ready', async () => {
     else log(`Using downloaded ADB from path: ${adbPath}`, 'adb')
   }
 
-  if (getStorageValue('setupComplete') === true) await startServer()
+  if (getStorageValue('setupComplete') === true)
+    await serverManager.start()
 
   await setupIpcHandlers()
   await setupTray()
+
+  serverManager.on('status', up => {
+    mainWindow?.webContents.send('serverStatus', up)
+  })
 
   protocol.handle('shortcut', req => {
     const name = req.url.split('/').pop()
@@ -205,7 +214,7 @@ enum IPCHandler {
   InstallApp = 'installApp',
   StartServer = 'startServer',
   StopServer = 'stopServer',
-  IsServerStarted = 'isServerStarted',
+  GetServerInfo = 'getServerInfo',
   ForwardSocketServer = 'forwardSocketServer',
   GetVersion = 'getVersion',
   GetStorageValue = 'getStorageValue',
@@ -237,7 +246,9 @@ enum IPCHandler {
   HasCustomScreensaverImage = 'hasCustomScreensaverImage',
   OpenDevTools = 'openDevTools',
   GetChannel = 'getChannel',
-  CheckUpdate = 'checkUpdate'
+  CheckUpdate = 'checkUpdate',
+  FindOpenPort = 'findOpenPort',
+  IsPortOpen = 'isPortOpen'
 }
 
 async function setupIpcHandlers() {
@@ -273,15 +284,15 @@ async function setupIpcHandlers() {
   })
 
   ipcMain.handle(IPCHandler.StartServer, async () => {
-    await startServer()
+    await serverManager.start()
   })
 
   ipcMain.handle(IPCHandler.StopServer, async () => {
-    await stopServer()
+    await serverManager.stop()
   })
 
-  ipcMain.handle(IPCHandler.IsServerStarted, async () => {
-    return await isServerStarted()
+  ipcMain.handle(IPCHandler.GetServerInfo, async () => {
+    return serverManager.getServerInfo()
   })
 
   ipcMain.handle(IPCHandler.ForwardSocketServer, async () => {
@@ -495,6 +506,14 @@ async function setupIpcHandlers() {
       latestVersion: latestVersion.version,
       downloadUrl: latestVersion.downloadUrl
     }
+  })
+
+  ipcMain.handle(IPCHandler.FindOpenPort, async () => {
+    return await findOpenPort()
+  })
+
+  ipcMain.handle(IPCHandler.IsPortOpen, async (_event, port) => {
+    return await isPortOpen(port as number)
   })
 }
 

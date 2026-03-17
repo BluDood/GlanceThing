@@ -430,3 +430,19 @@
   animation: appear 500ms ease;
   margin-bottom: 10px;
 }
+
+.customPort .notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  animation: appear 500ms ease;
+}
+
+.customPort .notice[data-type='success'] {
+  color: #1ed760;
+}
+
+.customPort .notice[data-type='error'] {
+  color: #f00;
+}

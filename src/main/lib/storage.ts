@@ -2,8 +2,18 @@ import { app, safeStorage } from 'electron'
 import path from 'path'
 import fs from 'fs'
 
-import { log, LogLevel, random, safeParse, setLogLevel } from './utils.js'
+import {
+  findOpenPort,
+  isPortOpen,
+  log,
+  LogLevel,
+  random,
+  safeParse,
+  setLogLevel
+} from './utils.js'
+
 import { setAutoBrightness, setBrightnessSmooth } from './adb.js'
+import { serverManager } from './server.js'
 import { updateTime } from './time.js'
 
 let storage = {}
@@ -22,7 +32,14 @@ const storageValueHandlers: Record<string, (value: unknown) => void> = {
   brightness: async value => {
     await setBrightnessSmooth(null, value as number)
   },
-  logLevel: async value => setLogLevel(value as LogLevel)
+  logLevel: async value => setLogLevel(value as LogLevel),
+  port: async p => {
+    const newPort = p as number | null
+    const info = serverManager.getServerInfo()
+    if (info.running && info.port !== newPort) {
+      await serverManager.restart()
+    }
+  }
 }
 
 function getStoragePath() {
@@ -135,4 +152,27 @@ export function setPlaybackHandlerConfig(
     Buffer.from(JSON.stringify(config)).toString('base64'),
     true
   )
+}
+
+export async function getServerPort() {
+  const savedPort = getStorageValue('port')
+  let port = savedPort
+
+  if (savedPort) {
+    const isOpen = await isPortOpen(savedPort)
+
+    if (!isOpen) {
+      log(
+        `Port ${savedPort} is not open, finding a new one`,
+        'Server',
+        LogLevel.WARN
+      )
+      port = await findOpenPort()
+      setStorageValue('port', null)
+    }
+  } else {
+    port = await findOpenPort()
+  }
+
+  return port
 }

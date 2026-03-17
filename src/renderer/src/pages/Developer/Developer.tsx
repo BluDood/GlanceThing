@@ -1,10 +1,15 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { DevModeContext } from '@/contexts/DevModeContext.js'
 import { ModalContext } from '@/contexts/ModalContext.js'
 
 import styles from './Developer.module.css'
-import { useLocation, useNavigate } from 'react-router-dom'
+
+interface ServerInfo {
+  running: boolean
+  port: number | null
+}
 
 enum CarThingState {
   NotFound = 'not_found',
@@ -29,22 +34,15 @@ const Developer: React.FC = () => {
     if (e.target === e.currentTarget) setModalOpen('developer', false)
   }
 
-  const [serverStarted, setServerStarted] = useState(false)
-
   const [carThingState, setCarThingState] = useState<CarThingState | null>(
     null
   )
   const carThingStateRef = useRef(carThingState)
   const [hasCustomClient, setHasCustomClient] = useState(false)
 
+  const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null)
+
   useEffect(() => {
-    async function checkServerStarted() {
-      const started = await window.api.isServerStarted()
-      setServerStarted(started)
-    }
-
-    const interval = setInterval(checkServerStarted, 1000)
-
     const removeListener = window.api.on('carThingState', s => {
       const state = s as CarThingState
 
@@ -52,18 +50,22 @@ const Developer: React.FC = () => {
       carThingStateRef.current = state
     })
 
+    const removeServerInfoListener = window.api.on('serverStatus', up =>
+      setServerInfo(up as ServerInfo)
+    )
+
     const timeout = setTimeout(() => {
       if (carThingStateRef.current !== null) return
 
       window.api.triggerCarThingStateUpdate()
     }, 200)
 
-    checkServerStarted()
+    window.api.getServerInfo().then(setServerInfo)
 
     return () => {
-      clearInterval(interval)
       clearTimeout(timeout)
       removeListener()
+      removeServerInfoListener()
     }
   }, [])
 
@@ -209,32 +211,36 @@ const Developer: React.FC = () => {
             </button>
           </div>
         </div>
-        <div className={styles.section}>
-          <div className={styles.status}>
-            <div
-              className={styles.dot}
-              data-color={serverStarted ? 'green' : 'red'}
-            ></div>
-            {serverStarted ? 'Server is running' : 'Server is stopped'}
+        {serverInfo ? (
+          <div className={styles.section}>
+            <div className={styles.status}>
+              <div
+                className={styles.dot}
+                data-color={serverInfo.running ? 'green' : 'red'}
+              ></div>
+              {serverInfo.running
+                ? `Server is running on port ${serverInfo.port}`
+                : 'Server is stopped'}
+            </div>
+            <div className={styles.actions}>
+              <button
+                onClick={() => window.api.startServer()}
+                disabled={serverInfo.running}
+              >
+                <span className="material-icons">play_arrow</span>
+                Start
+              </button>
+              <button
+                data-color="red"
+                onClick={() => window.api.stopServer()}
+                disabled={!serverInfo.running}
+              >
+                <span className="material-icons">block</span>
+                Stop
+              </button>
+            </div>
           </div>
-          <div className={styles.actions}>
-            <button
-              onClick={() => window.api.startServer()}
-              disabled={serverStarted}
-            >
-              <span className="material-icons">play_arrow</span>
-              Start
-            </button>
-            <button
-              data-color="red"
-              onClick={() => window.api.stopServer()}
-              disabled={!serverStarted}
-            >
-              <span className="material-icons">block</span>
-              Stop
-            </button>
-          </div>
-        </div>
+        ) : null}
         <div className={styles.bottomActions}>
           {location.pathname === '/setup' ? (
             <button onClick={() => navigate('/')}>

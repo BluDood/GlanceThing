@@ -253,6 +253,75 @@ const SliderSetting: React.FC<{
   )
 }
 
+const InputSubmitSetting: React.FC<{
+  label: string
+  description?: string
+  disabled?: boolean
+  defaultValue?: string
+  placeholder?: string
+  regex?: RegExp
+  onSubmit: (value: string) => void
+  clearOnSubmit?: boolean
+  submitLabel: string
+}> = ({
+  label,
+  description,
+  disabled,
+  defaultValue,
+  placeholder,
+  regex,
+  onSubmit,
+  clearOnSubmit,
+  submitLabel
+}) => {
+  const [value, setValue] = useState(defaultValue ?? '')
+
+  function submit() {
+    if (disabled) return
+    onSubmit(value.trim())
+    if (clearOnSubmit) setValue('')
+  }
+
+  return (
+    <div className={styles.inputWithSubmitSetting}>
+      <div className={styles.title}>
+        <p>{label}</p>
+        <p className={styles.description}>{description}</p>
+      </div>
+      <div className={styles.form}>
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={value}
+          disabled={disabled}
+          onKeyDown={e => {
+            const controlKeys = [
+              'Backspace',
+              'ArrowUp',
+              'ArrowDown',
+              'ArrowLeft',
+              'ArrowRight',
+              'Delete'
+            ]
+
+            if (
+              regex &&
+              !regex.test(e.key) &&
+              !controlKeys.includes(e.key)
+            )
+              e.preventDefault()
+            else if (e.key === 'Enter') submit()
+          }}
+          onChange={e => setValue(e.target.value)}
+        />
+        <button disabled={disabled} onClick={submit}>
+          {submitLabel}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const GeneralTab: React.FC = () => {
   const navigate = useNavigate()
   const [loaded, setLoaded] = useState(false)
@@ -650,6 +719,7 @@ const AdvancedTab: React.FC = () => {
   const settings = useRef<{
     disableSocketAuth?: boolean
     logLevel?: number
+    port?: number | null
   }>({})
 
   useEffect(() => {
@@ -658,13 +728,63 @@ const AdvancedTab: React.FC = () => {
         disableSocketAuth:
           (await window.api.getStorageValue('disableSocketAuth')) === true,
         logLevel: ((await window.api.getStorageValue('logLevel')) ||
-          1) as number
+          1) as number,
+        port: ((await window.api.getStorageValue('port')) || null) as
+          | number
+          | null
       }
+
       setLoaded(true)
     }
 
     loadSettings()
   }, [])
+
+  const [portNotice, setPortNotice] = useState<{
+    type: 'success' | 'error'
+    message: string
+  } | null>(null)
+
+  async function changePort(newPort: number | null) {
+    setPortNotice(null)
+
+    if (newPort === settings.current.port) return
+
+    if (newPort === null) {
+      await window.api.setStorageValue('port', null)
+      settings.current.port = null
+    } else {
+      if (isNaN(newPort) || newPort < 1024 || newPort > 65535)
+        return setPortNotice({
+          type: 'error',
+          message: 'Port is not valid (must be between 1024 and 65535)'
+        })
+
+      if (!(await window.api.isPortOpen(newPort)))
+        return setPortNotice({
+          type: 'error',
+          message: 'The port is unavailable, choose another one'
+        })
+
+      await window.api.setStorageValue('port', newPort)
+      settings.current.port = newPort
+    }
+
+    setPortNotice({
+      type: 'success',
+      message: 'Port changed and server restarted!'
+    })
+  }
+
+  useEffect(() => {
+    if (portNotice) {
+      const timeout = setTimeout(() => setPortNotice(null), 5000)
+
+      return () => clearTimeout(timeout)
+    }
+
+    return
+  }, [portNotice])
 
   return (
     loaded && (
@@ -700,6 +820,28 @@ const AdvancedTab: React.FC = () => {
             window.api.setStorageValue('disableSocketAuth', value)
           }
         />
+        <div className={styles.customPort}>
+          <InputSubmitSetting
+            label="Server Port"
+            description="The port the server listens on. Leave empty to use a random available port."
+            defaultValue={settings.current.port?.toString()}
+            placeholder="1337"
+            regex={/[\d]/}
+            onSubmit={async value => {
+              const port = parseInt(value)
+              changePort(isNaN(port) ? null : port)
+            }}
+            submitLabel="Change"
+          />
+          {portNotice && (
+            <p className={styles.notice} data-type={portNotice.type}>
+              <span className="material-icons">
+                {portNotice.type === 'success' ? 'check_circle' : 'error'}
+              </span>
+              {portNotice.message}
+            </p>
+          )}
+        </div>
       </div>
     )
   )

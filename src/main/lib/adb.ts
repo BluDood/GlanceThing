@@ -12,7 +12,7 @@ import {
   log,
   LogLevel
 } from './utils.js'
-import { getServerPort } from './server.js'
+import { serverManager } from './server.js'
 import { getSocketPassword } from './storage.js'
 import { getWebAppDir } from './webapp.js'
 
@@ -306,9 +306,10 @@ export async function forwardSocketServer(device: string | null) {
   if (!device) throw new Error('No valid CarThing found')
 
   const adb = await getAdbExecutable()
-  const port = await getServerPort()
+  const info = serverManager.getServerInfo()
+  if (!info.port) return
 
-  await execAsync(`${adb} -s ${device} reverse tcp:1337 tcp:${port}`)
+  await execAsync(`${adb} -s ${device} reverse tcp:1337 tcp:${info.port}`)
 
   log('Forwarded socket server!', 'adb', LogLevel.DEBUG)
 }
